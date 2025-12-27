@@ -46,6 +46,11 @@ export const Strategies: ElementStrategy[] = [
     new DetachedInjectionStrategy(
         'track-artist-card',
         '[data-testid="track-artist-link-card"] a div'
+    ),
+    // Track Row - Album Link
+    new DetachedInjectionStrategy(
+        'track-row-album',
+        '[data-testid="tracklist-row"] [role="gridcell"] a[href^="/album/"]'
     )
 ];
 
