@@ -51,6 +51,11 @@ export const Strategies: ElementStrategy[] = [
     new DetachedInjectionStrategy(
         'track-row-album',
         '[data-testid="tracklist-row"] [role="gridcell"] a[href^="/album/"]'
+    ),
+    // Carousel Card - Title (Albums/Playlists)
+    new DetachedInjectionStrategy(
+        'card-title',
+        '[data-encore-id="card"] [data-encore-id="cardTitle"] span'
     )
 ];
 
