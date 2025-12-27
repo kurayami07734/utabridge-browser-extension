@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Strategies, ElementStrategy } from '../../strategies';
+import { Strategies, ElementStrategy, UB_PROCESSED_ATTR } from '../../strategies';
 
 export interface DiscoveredTarget {
     id: string;
@@ -17,6 +17,7 @@ export const useDomObserver = (enabled: boolean) => {
             // Cleanup attributes so we can re-discover them if re-enabled
             document.querySelectorAll('[data-ub-react-active]').forEach(el => {
                 el.removeAttribute('data-ub-react-active');
+                el.removeAttribute(UB_PROCESSED_ATTR);
             });
             return;
         }
