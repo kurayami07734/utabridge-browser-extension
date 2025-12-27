@@ -14,8 +14,12 @@ export const prepareMountPoint = (originalElement: HTMLElement): HTMLElement | n
     // 3. Create Mount Point
     const mountPoint = document.createElement('div');
     mountPoint.className = UB_MOUNT_CLASS;
-    mountPoint.style.display = 'flex';
-    mountPoint.style.alignItems = 'center';
+    // Zero-layout container that allows children (Tooltips) to be visible
+    mountPoint.style.display = 'inline-block';
+    mountPoint.style.width = '0px';
+    mountPoint.style.height = '0px';
+    mountPoint.style.overflow = 'visible';
+    mountPoint.style.verticalAlign = 'middle'; // Align with text if possible
 
     // 4. Inject AFTER original
     originalElement.parentElement?.insertBefore(mountPoint, originalElement.nextSibling);
