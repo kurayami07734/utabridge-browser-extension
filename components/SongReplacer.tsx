@@ -90,12 +90,12 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
                     <div className="ub-marquee-wrapper">
                         <div className="ub-marquee-inner ub-animate-marquee pr-8">
                             <Tooltip content={`Original: ${currentText}`}>
-                                <span className="font-medium text-green-400 hover:underline cursor-help mr-8">
+                                <span className="mr-8">
                                     {staticContent}
                                 </span>
                             </Tooltip>
                             <Tooltip content={`Original: ${currentText}`}>
-                                <span className="font-medium text-green-400 hover:underline cursor-help mr-8">
+                                <span className="mr-8">
                                     {staticContent}
                                 </span>
                             </Tooltip>
@@ -104,7 +104,7 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
                 ) : (
                     <Tooltip content={`Original: ${currentText}`}>
                         <span
-                            className="font-medium text-green-400 hover:underline cursor-help truncate block"
+                            className="truncate block"
                             title="Static Replacement"
                         >
                             {staticContent}
