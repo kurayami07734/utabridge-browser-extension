@@ -19,13 +19,5 @@ export const prepareMountPoint = (originalElement: HTMLElement): HTMLElement | n
 
     // 4. Inject AFTER original
     originalElement.parentElement?.insertBefore(mountPoint, originalElement.nextSibling);
-
-    // 5. Hide Original (Non-destructive)
-    originalElement.style.visibility = 'hidden';
-    originalElement.style.position = 'absolute';
-    originalElement.style.width = '1px';
-    originalElement.style.height = '1px';
-    originalElement.style.overflow = 'hidden';
-
     return mountPoint;
 };

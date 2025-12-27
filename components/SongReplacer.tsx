@@ -14,10 +14,23 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
     const [isOverflowing, setIsOverflowing] = useState(false);
     const textContainerRef = useRef<HTMLDivElement>(null);
 
-    // RESTORE VISIBILITY ON UNMOUNT
+    const hasNonAscii = /[^\x00-\x7F]/.test(currentText);
+
+    // HANDLING VISIBILITY:
+    // If text has non-ASCII characters, we hide the original and show the replacement.
+    // If text is purely ASCII, we ensure original is visible and show nothing.
     useLayoutEffect(() => {
-        // When mounted, we assume dom.ts or earlier logic hid the element.
-        // We ensure it stays hidden (optional, but good for consistency)
+        if (!hasNonAscii) {
+            // Restore visibility if it's ASCII
+            originalElement.style.visibility = '';
+            originalElement.style.position = '';
+            originalElement.style.width = '';
+            originalElement.style.height = '';
+            originalElement.style.overflow = '';
+            return;
+        }
+
+        // Hide if non-ascii (so our replacement shows instead)
         originalElement.style.visibility = 'hidden';
         originalElement.style.position = 'absolute';
         originalElement.style.width = '1px';
@@ -32,7 +45,7 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
             originalElement.style.height = '';
             originalElement.style.overflow = '';
         };
-    }, [originalElement]);
+    }, [originalElement, hasNonAscii]);
 
     // Keep the observer to handle Spotify recycling rows (Virtualization)
     useEffect(() => {
@@ -60,6 +73,9 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
     }, [currentText, isOverflowing]);
 
 
+
+
+    if (!hasNonAscii) return null;
 
     const staticContent = `Static Romaji Title ${currentText}`;
 
