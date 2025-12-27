@@ -14,6 +14,26 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
     const [isOverflowing, setIsOverflowing] = useState(false);
     const textContainerRef = useRef<HTMLDivElement>(null);
 
+    // RESTORE VISIBILITY ON UNMOUNT
+    useLayoutEffect(() => {
+        // When mounted, we assume dom.ts or earlier logic hid the element.
+        // We ensure it stays hidden (optional, but good for consistency)
+        originalElement.style.visibility = 'hidden';
+        originalElement.style.position = 'absolute';
+        originalElement.style.width = '1px';
+        originalElement.style.height = '1px';
+        originalElement.style.overflow = 'hidden';
+
+        return () => {
+            // When unmounting (e.g. Disabled), restore visibility
+            originalElement.style.visibility = '';
+            originalElement.style.position = '';
+            originalElement.style.width = '';
+            originalElement.style.height = '';
+            originalElement.style.overflow = '';
+        };
+    }, [originalElement]);
+
     // Keep the observer to handle Spotify recycling rows (Virtualization)
     useEffect(() => {
         const observer = new MutationObserver(() => {
@@ -38,6 +58,8 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
             }
         }
     }, [currentText, isOverflowing]);
+
+
 
     const staticContent = `Static Romaji Title ${currentText}`;
 

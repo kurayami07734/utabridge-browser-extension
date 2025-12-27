@@ -1,12 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { useEffect, useState } from 'react';
 
 import { useDomObserver } from './hooks/useDomObserver';
 import { SongReplacer } from '../components/SongReplacer';
+import { isExtensionEnabled } from './utils/storage';
 import '../assets/style.css';
 
 const ContentApp = () => {
-    const targets = useDomObserver();
+    const [enabled, setEnabled] = useState(true);
+
+    useEffect(() => {
+        isExtensionEnabled.getValue().then(setEnabled);
+        return isExtensionEnabled.watch(setEnabled);
+    }, []);
+
+    const targets = useDomObserver(enabled);
     return (
         <>
             {targets.map(target => (
