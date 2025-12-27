@@ -26,6 +26,21 @@ export const Strategies: ElementStrategy[] = [
     new StandardInjectionStrategy(
         'grid-artist',
         '[data-testid="tracklist-row"] [role="gridcell"] a[href^="/artist/"]'
+    ),
+    // Entity Header - Title (e.g. Album/Track Name)
+    new StandardInjectionStrategy(
+        'header-title',
+        '[data-testid="entityTitle"] h1'
+    ),
+    // Entity Header - Creator (e.g. Artist Name)
+    new StandardInjectionStrategy(
+        'header-creator',
+        '[data-testid="creator-link"]'
+    ),
+    // Sticky Topbar - Title (appears on scroll)
+    new StandardInjectionStrategy(
+        'topbar-title',
+        '[data-testid="topbar-content"] span[draggable="true"]'
     )
 ];
 
