@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { defineContentScript } from 'wxt/sandbox';
+
 import { useDomObserver } from './hooks/useDomObserver';
 import { SongReplacer } from '../components/SongReplacer';
 import '../assets/style.css';

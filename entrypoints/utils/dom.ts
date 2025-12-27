@@ -14,7 +14,7 @@ export const prepareMountPoint = (originalElement: HTMLElement): HTMLElement | n
     // 3. Create Mount Point
     const mountPoint = document.createElement('div');
     mountPoint.className = UB_MOUNT_CLASS;
-    mountPoint.style.display = 'inline-flex';
+    mountPoint.style.display = 'flex';
     mountPoint.style.alignItems = 'center';
 
     // 4. Inject AFTER original
