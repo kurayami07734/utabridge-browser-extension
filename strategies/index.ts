@@ -56,6 +56,11 @@ export const Strategies: ElementStrategy[] = [
     new DetachedInjectionStrategy(
         'card-title',
         '[data-encore-id="card"] [data-encore-id="cardTitle"] span'
+    ),
+    // Carousel Card - Description/Subtitle
+    new DetachedInjectionStrategy(
+        'card-description',
+        '[data-encore-id="card"] [data-encore-id="cardSubtitle"], [data-encore-id="card"] [data-encore-id="cardDescription"]'
     )
 ];
 
