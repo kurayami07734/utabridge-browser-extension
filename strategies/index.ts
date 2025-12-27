@@ -41,6 +41,11 @@ export const Strategies: ElementStrategy[] = [
     new StandardInjectionStrategy(
         'topbar-title',
         '[data-testid="topbar-content"] span[draggable="true"]'
+    ),
+    // Track Artist Card (Bottom of track page)
+    new DetachedInjectionStrategy(
+        'track-artist-card',
+        '[data-testid="track-artist-link-card"] a div'
     )
 ];
 
