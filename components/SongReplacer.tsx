@@ -2,14 +2,17 @@ import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Tooltip } from './Tooltip'; // Wrapper for Floating UI
 
+import { ElementStrategy } from '../strategies/ElementStrategy';
+
 interface Props {
     mountNode: HTMLElement;
     originalElement: HTMLElement;
+    strategy: ElementStrategy;
 }
 
-export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) => {
+export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement, strategy }) => {
     // We track the original text to translate/replace
-    const [currentText, setCurrentText] = useState(originalElement.textContent || '');
+    const [currentText, setCurrentText] = useState(strategy.getOriginalText(originalElement));
     // Track if we are hovering the original element (managed via manual listeners)
     const [isHovered, setIsHovered] = useState(false);
 
@@ -21,7 +24,7 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
     // 1. Observer: Watch for external changes to the text (e.g. Spotify changing song)
     useLayoutEffect(() => {
         const observer = new MutationObserver(() => {
-            const newText = originalElement.textContent || '';
+            const newText = strategy.getOriginalText(originalElement);
 
             // If the text matches what we just wrote, ignore it (it's our change)
             if (newText === lastReplacementRef.current) return;
@@ -33,14 +36,14 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
         });
         observer.observe(originalElement, { characterData: true, subtree: true, childList: true });
         return () => observer.disconnect();
-    }, [originalElement, currentText]);
+    }, [originalElement, currentText, strategy]);
 
     // 2. Replacement Logic: modifying the DOM directly to preserve styles
     useLayoutEffect(() => {
         if (!hasNonAscii) {
             // Restore original text if we previously modified it, just in case
-            if (lastReplacementRef.current && originalElement.textContent === lastReplacementRef.current) {
-                originalElement.textContent = currentText;
+            if (lastReplacementRef.current && strategy.getOriginalText(originalElement) === lastReplacementRef.current) {
+                strategy.applyReplacement(originalElement, currentText);
             }
             return;
         }
@@ -48,18 +51,18 @@ export const SongReplacer: React.FC<Props> = ({ mountNode, originalElement }) =>
         const staticContent = `Static Romaji Title ${currentText}`;
 
         // Apply replacement
-        if (originalElement.textContent !== staticContent) {
+        if (strategy.getOriginalText(originalElement) !== staticContent) {
             lastReplacementRef.current = staticContent;
-            originalElement.textContent = staticContent;
+            strategy.applyReplacement(originalElement, staticContent);
         }
 
         // Cleanup: Disable/Unmount -> Restore original
         return () => {
-            if (originalElement.textContent === staticContent) {
-                originalElement.textContent = currentText;
+            if (strategy.getOriginalText(originalElement) === staticContent) {
+                strategy.applyReplacement(originalElement, currentText);
             }
         };
-    }, [currentText, hasNonAscii, originalElement]);
+    }, [currentText, hasNonAscii, originalElement, strategy]);
 
     // 3. Hover Listeners and Positioning
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });

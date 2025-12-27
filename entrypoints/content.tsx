@@ -23,6 +23,7 @@ const ContentApp = () => {
                     key={target.id}
                     mountNode={target.mountNode}
                     originalElement={target.originalElement}
+                    strategy={target.strategy}
                 />
             ))}
         </>
