@@ -110,6 +110,10 @@ export class SpotifyProfile implements WebsiteProfile {
         // Global Fallback - Entity Links (Search, Shelves, etc. without specific IDs)
         new DOMElement('a[href*="/album/"] [data-encore-id="text"], a[href*="/artist/"] [data-encore-id="text"], a[href*="/playlist/"] [data-encore-id="text"]')
             .withId('global-entity-link')
-            .asDetached()
+            .asDetached(),
+
+        // Artist Page - Name
+        new DOMElement('[data-testid="adaptiveEntityTitle"] [data-encore-id="adaptiveTitle"]')
+            .withId('artist-page-name')
     ];
 }
