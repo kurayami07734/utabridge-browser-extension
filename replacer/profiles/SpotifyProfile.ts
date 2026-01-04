@@ -114,6 +114,11 @@ export class SpotifyProfile implements WebsiteProfile {
 
         // Artist Page - Name
         new DOMElement('[data-testid="adaptiveEntityTitle"] [data-encore-id="adaptiveTitle"]')
-            .withId('artist-page-name')
+            .withId('artist-page-name'),
+
+        // Document Title
+        new DOMElement('title')
+            .withId('document-title')
+            .asDetached()
     ];
 }
