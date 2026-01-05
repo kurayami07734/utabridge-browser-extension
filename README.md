@@ -1,6 +1,6 @@
 # UtaBridge
 
-[![Playwright Tests](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/playwright.yml/badge.svg)](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/playwright.yml)
+[![CI checks](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/ci.yml)
 
 A project to help non-japanese speakers read the song titles, artist titles
 and more in their native script. Originally intended to be used with spotify.

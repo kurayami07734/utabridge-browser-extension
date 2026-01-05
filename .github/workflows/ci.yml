@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: CI
 on:
     push:
         branches: [main, master]
@@ -18,6 +18,10 @@ jobs:
                   version: 8
             - name: Install dependencies
               run: pnpm install
+            - name: Check Formatting
+              run: pnpm format:check
+            - name: Lint
+              run: pnpm lint
             - name: Build Extension
               run: pnpm build
             - name: Install Playwright Browsers
