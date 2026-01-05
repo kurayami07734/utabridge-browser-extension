@@ -8,7 +8,7 @@ const htmlFixtures: Record<string, string> = {};
 
 // Load all HTML files from the fixtures directory
 if (fs.existsSync(fixturesDir)) {
-    const files = fs.readdirSync(fixturesDir).filter(f => f.endsWith('.html'));
+    const files = fs.readdirSync(fixturesDir).filter((f) => f.endsWith('.html'));
     for (const file of files) {
         htmlFixtures[file] = fs.readFileSync(path.join(fixturesDir, file), 'utf-8');
     }
@@ -21,7 +21,7 @@ test.describe('Spotify Locators', () => {
     for (const elementStrategy of profile.elements) {
         test(`should find element: ${elementStrategy.id}`, async ({ page }) => {
             let found = false;
-            let foundInParams: string[] = [];
+            const foundInParams: string[] = [];
 
             // Check against EVERY loaded fixture
             // Each test checks if the locator is present in ANY of the provided HTML snapshots.
@@ -39,8 +39,10 @@ test.describe('Spotify Locators', () => {
             console.log(`[${elementStrategy.id}] Found in: ${foundInParams.join(', ') || 'NONE'}`);
 
             // The locator must exist in AT LEAST ONE of the provided fixtures
-            expect(found, `Locator '${elementStrategy.id}' (${elementStrategy.selector}) not found in any fixture.`)
-                .toBe(true);
+            expect(
+                found,
+                `Locator '${elementStrategy.id}' (${elementStrategy.selector}) not found in any fixture.`
+            ).toBe(true);
         });
     }
 });

@@ -17,7 +17,7 @@ const ContentApp = () => {
     const targets = useDomObserver(enabled);
     return (
         <>
-            {targets.map(target => (
+            {targets.map((target) => (
                 <SongReplacer
                     key={target.id}
                     originalElement={target.originalElement}
@@ -32,11 +32,11 @@ export default defineContentScript({
     matches: ['*://open.spotify.com/*'],
     cssInjectionMode: 'manifest',
 
-    main(ctx) {
+    main(_ctx) {
         const appRoot = document.createElement('div');
         appRoot.id = 'utabridge-orchestrator';
         document.body.appendChild(appRoot);
 
         ReactDOM.createRoot(appRoot).render(<ContentApp />);
-    }
+    },
 });

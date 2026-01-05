@@ -10,15 +10,19 @@ export class SpotifyProfile implements WebsiteProfile {
 
     elements: DOMElement[] = [
         // Tracklist Rows (e.g. in playlists)
-        new DOMElement('[data-testid="tracklist-row"] [data-testid="internal-track-link"]')
-            .withId('track-row'),
+        new DOMElement('[data-testid="tracklist-row"] [data-testid="internal-track-link"]').withId(
+            'track-row'
+        ),
 
         // Now Playing Widget (Bottom Bar) - Title
-        new DOMElement('[data-testid="now-playing-widget"] [data-testid="context-item-info-title"]')
-            .withId('np-widget-title'),
+        new DOMElement(
+            '[data-testid="now-playing-widget"] [data-testid="context-item-info-title"]'
+        ).withId('np-widget-title'),
 
         // Now Playing Widget (Bottom Bar) - Artist
-        new DOMElement('[data-testid="now-playing-widget"] [data-testid="context-item-info-artist"]')
+        new DOMElement(
+            '[data-testid="now-playing-widget"] [data-testid="context-item-info-artist"]'
+        )
             .withId('np-widget-artist')
             .asDetached(),
 
@@ -45,24 +49,25 @@ export class SpotifyProfile implements WebsiteProfile {
             .asDetached(),
 
         // Grid View - Track Title (e.g. Artist Top Tracks)
-        new DOMElement('[data-testid="tracklist-row"] [role="gridcell"] a[href^="/track/"]')
-            .withId('grid-track'),
+        new DOMElement('[data-testid="tracklist-row"] [role="gridcell"] a[href^="/track/"]').withId(
+            'grid-track'
+        ),
 
         // Grid View - Artist Name (e.g. Artist Top Tracks)
-        new DOMElement('[data-testid="tracklist-row"] [role="gridcell"] a[href^="/artist/"]')
-            .withId('grid-artist'),
+        new DOMElement(
+            '[data-testid="tracklist-row"] [role="gridcell"] a[href^="/artist/"]'
+        ).withId('grid-artist'),
 
         // Entity Header - Title (e.g. Album/Track Name)
-        new DOMElement('[data-testid="entityTitle"] h1')
-            .withId('header-title'),
+        new DOMElement('[data-testid="entityTitle"] h1').withId('header-title'),
 
         // Entity Header - Creator (e.g. Artist Name)
-        new DOMElement('[data-testid="creator-link"]')
-            .withId('header-creator'),
+        new DOMElement('[data-testid="creator-link"]').withId('header-creator'),
 
         // Sticky Topbar - Title (appears on scroll)
-        new DOMElement('[data-testid="topbar-content"] span[draggable="true"]')
-            .withId('topbar-title'),
+        new DOMElement('[data-testid="topbar-content"] span[draggable="true"]').withId(
+            'topbar-title'
+        ),
 
         // Track Artist Card (Bottom of track page)
         new DOMElement('[data-testid="track-artist-link-card"] a div')
@@ -80,17 +85,19 @@ export class SpotifyProfile implements WebsiteProfile {
             .asDetached(),
 
         // Carousel Card - Description/Subtitle
-        new DOMElement('[data-encore-id="card"] [data-encore-id="cardSubtitle"], [data-encore-id="card"] [data-encore-id="cardDescription"]')
+        new DOMElement(
+            '[data-encore-id="card"] [data-encore-id="cardSubtitle"], [data-encore-id="card"] [data-encore-id="cardDescription"]'
+        )
             .withId('card-description')
             .asDetached(),
 
         // Song Credits - Name (excludes Role)
-        new DOMElement('[data-testid="credits-artist-row"] [data-encore-id="text"]:not([data-testid="artist-row-role"])')
-            .withId('credits-row-name'),
+        new DOMElement(
+            '[data-testid="credits-artist-row"] [data-encore-id="text"]:not([data-testid="artist-row-role"])'
+        ).withId('credits-row-name'),
 
         // Song Credits - Role (e.g. Composer)
-        new DOMElement('[data-testid="artist-row-role"]')
-            .withId('credits-row-role'),
+        new DOMElement('[data-testid="artist-row-role"]').withId('credits-row-role'),
 
         // List Row - Title (Queue, etc.)
         new DOMElement('[data-encore-id="listRowTitle"] > span')
@@ -108,17 +115,18 @@ export class SpotifyProfile implements WebsiteProfile {
             .asDetached(),
 
         // Global Fallback - Entity Links (Search, Shelves, etc. without specific IDs)
-        new DOMElement('a[href*="/album/"] [data-encore-id="text"], a[href*="/artist/"] [data-encore-id="text"], a[href*="/playlist/"] [data-encore-id="text"]')
+        new DOMElement(
+            'a[href*="/album/"] [data-encore-id="text"], a[href*="/artist/"] [data-encore-id="text"], a[href*="/playlist/"] [data-encore-id="text"]'
+        )
             .withId('global-entity-link')
             .asDetached(),
 
         // Artist Page - Name
-        new DOMElement('[data-testid="adaptiveEntityTitle"] [data-encore-id="adaptiveTitle"]')
-            .withId('artist-page-name'),
+        new DOMElement(
+            '[data-testid="adaptiveEntityTitle"] [data-encore-id="adaptiveTitle"]'
+        ).withId('artist-page-name'),
 
         // Document Title
-        new DOMElement('title')
-            .withId('document-title')
-            .asDetached()
+        new DOMElement('title').withId('document-title').asDetached(),
     ];
 }
