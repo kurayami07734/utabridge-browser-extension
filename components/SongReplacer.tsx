@@ -18,7 +18,9 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
 
     const lastReplacementRef = useRef<string | null>(null);
 
-    const hasNonAscii = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(currentText);
+    const hasNonAscii = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(
+        currentText
+    );
 
     useLayoutEffect(() => {
         const observer = new MutationObserver(() => {
@@ -59,7 +61,10 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
     useLayoutEffect(() => {
         if (!hasNonAscii) {
             // Restore original if needed
-            if (lastReplacementRef.current && strategy.getOriginalText(originalElement) === lastReplacementRef.current) {
+            if (
+                lastReplacementRef.current &&
+                strategy.getOriginalText(originalElement) === lastReplacementRef.current
+            ) {
                 strategy.applyReplacement(originalElement, currentText);
             }
             return;
@@ -85,7 +90,6 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
         };
     }, [currentText, translation, isLoading, hasNonAscii, originalElement, strategy]);
 
-
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
@@ -96,7 +100,7 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
             const placement = strategy.tooltipPlacement || 'top';
             setTooltipPos({
                 x: rect.left + rect.width / 2,
-                y: placement === 'bottom' ? rect.bottom : rect.top
+                y: placement === 'bottom' ? rect.bottom : rect.top,
             });
         };
 
@@ -113,14 +117,15 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
             originalElement.removeEventListener('mouseenter', onEnter);
             originalElement.removeEventListener('mouseleave', onLeave);
         };
-    }, [originalElement, hasNonAscii]);
+    }, [originalElement, hasNonAscii, strategy]);
 
     if (!hasNonAscii) return null;
 
     const placement = strategy.tooltipPlacement || 'top';
     const isBottom = placement === 'bottom';
 
-    const baseClasses = "fixed bg-[#282828] text-white text-[13px] font-medium rounded opacity-100 z-[9999] pointer-events-none shadow-[0_8px_16px_rgba(0,0,0,0.5)] transform -translate-x-1/2";
+    const baseClasses =
+        'fixed bg-[#282828] text-white text-[13px] font-medium rounded opacity-100 z-[9999] pointer-events-none shadow-[0_8px_16px_rgba(0,0,0,0.5)] transform -translate-x-1/2';
     const placementClasses = isBottom
         ? "mt-2 after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-b-[#282828] after:border-x-transparent after:border-t-transparent"
         : "-translate-y-full mb-2 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-t-[#282828] after:border-x-transparent after:border-b-transparent";

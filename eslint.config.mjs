@@ -58,5 +58,5 @@ export default defineConfig([
                 afterEach: 'readonly',
             },
         },
-    }
+    },
 ]);

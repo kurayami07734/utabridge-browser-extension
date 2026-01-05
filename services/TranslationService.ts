@@ -11,7 +11,7 @@ export class TranslationService {
             const stored = await browser.storage.local.get(key);
             return (stored[key] as string) || null;
         } catch (e) {
-            console.error("[TranslationService] Error getting from cache", e);
+            console.error('[TranslationService] Error getting from cache', e);
             return null;
         }
     }
@@ -21,7 +21,7 @@ export class TranslationService {
             const key = this.getCacheKey(text);
             await browser.storage.local.set({ [key]: translation });
         } catch (e) {
-            console.error("[TranslationService] Error setting cache", e);
+            console.error('[TranslationService] Error setting cache', e);
         }
     }
 
@@ -29,25 +29,22 @@ export class TranslationService {
         try {
             await browser.runtime.sendMessage({
                 type: 'REQUEST_TRANSLATION',
-                text: text
+                text: text,
             } as ExtensionMessage);
         } catch (e) {
-            console.error("[TranslationService] Failed to send translation request", e);
+            console.error('[TranslationService] Failed to send translation request', e);
         }
     }
 
-    static observe(
-        text: string,
-        onUpdate: (translation: string | null) => void
-    ): () => void {
+    static observe(text: string, onUpdate: (translation: string | null) => void): () => void {
         const key = this.getCacheKey(text);
         let active = true;
 
         // Listener for storage changes
-        const listener = (changes: Record<string, any>, areaName: string) => {
+        const listener = (changes: Record<string, { newValue?: unknown }>, areaName: string) => {
             if (areaName === 'local' && changes[key]) {
                 if (active) {
-                    onUpdate(changes[key].newValue);
+                    onUpdate(changes[key].newValue as string);
                 }
             }
         };

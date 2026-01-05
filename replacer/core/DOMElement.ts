@@ -1,4 +1,3 @@
-
 export const UB_PROCESSED_ATTR = 'data-ub-processed';
 export const UB_MOUNT_CLASS = 'ub-mount-point';
 export const UB_STRATEGY_ID_ATTR = 'data-ub-strategy-id';

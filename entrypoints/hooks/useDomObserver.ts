@@ -15,7 +15,7 @@ export const useDomObserver = (enabled: boolean) => {
         if (!enabled) {
             setTargets([]);
             // Cleanup attributes so we can re-discover them if re-enabled
-            document.querySelectorAll('[data-ub-react-active]').forEach(el => {
+            document.querySelectorAll('[data-ub-react-active]').forEach((el) => {
                 el.removeAttribute('data-ub-react-active');
                 el.removeAttribute(UB_PROCESSED_ATTR);
             });
@@ -28,9 +28,9 @@ export const useDomObserver = (enabled: boolean) => {
 
             const newTargets: DiscoveredTarget[] = [];
 
-            currentProfile.elements.forEach(strategy => {
+            currentProfile.elements.forEach((strategy) => {
                 const elements = document.querySelectorAll(strategy.selector);
-                elements.forEach(el => {
+                elements.forEach((el) => {
                     const element = el as HTMLElement;
                     if (element.getAttribute('data-ub-react-active')) return;
 
@@ -43,13 +43,13 @@ export const useDomObserver = (enabled: boolean) => {
                             id: uniqueId,
                             originalElement: element,
                             mountNode,
-                            strategy
+                            strategy,
                         });
                     }
                 });
             });
 
-            if (newTargets.length > 0) setTargets(prev => [...prev, ...newTargets]);
+            if (newTargets.length > 0) setTargets((prev) => [...prev, ...newTargets]);
         };
 
         const observer = new MutationObserver(() => {

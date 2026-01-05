@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TranslationService } from '../../services/TranslationService';
 
 // Mock the global 'browser' object
-const storageMap = new Map<string, any>();
-const listeners = new Set<Function>();
+const storageMap = new Map<string, unknown>();
+const listeners = new Set<(changes: Record<string, unknown>, areaName: string) => void>();
 
 const mockBrowser = {
     storage: {
@@ -11,16 +11,23 @@ const mockBrowser = {
             get: vi.fn((key: string) => {
                 return Promise.resolve({ [key]: storageMap.get(key) });
             }),
-            set: vi.fn((obj: Record<string, any>) => {
+            set: vi.fn((obj: Record<string, unknown>) => {
                 Object.entries(obj).forEach(([k, v]) => storageMap.set(k, v));
                 // Trigger listeners
-                listeners.forEach(l => l({ [Object.keys(obj)[0]]: { newValue: Object.values(obj)[0] } }, 'local'));
+                listeners.forEach((l) =>
+                    l({ [Object.keys(obj)[0]]: { newValue: Object.values(obj)[0] } }, 'local')
+                );
                 return Promise.resolve();
             }),
         },
         onChanged: {
-            addListener: vi.fn((l: Function) => listeners.add(l)),
-            removeListener: vi.fn((l: Function) => listeners.delete(l)),
+            addListener: vi.fn((l: (changes: Record<string, unknown>, areaName: string) => void) =>
+                listeners.add(l)
+            ),
+            removeListener: vi.fn(
+                (l: (changes: Record<string, unknown>, areaName: string) => void) =>
+                    listeners.delete(l)
+            ),
         },
     },
     runtime: {
@@ -29,6 +36,7 @@ const mockBrowser = {
 };
 
 // Assign to global
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).browser = mockBrowser;
 
 describe('TranslationService', () => {
@@ -63,7 +71,7 @@ describe('TranslationService', () => {
             storageMap.set('translation_Cached Song', 'Cached Romaji');
             const callback = vi.fn();
 
-            const unsubscribe = TranslationService.observe('Cached Song', callback);
+            TranslationService.observe('Cached Song', callback);
 
             // Since get is async, we need to wait briefly or just expect it to be called eventually
             // In the implementation, observe calls get().then().
@@ -97,8 +105,8 @@ describe('TranslationService', () => {
             });
 
             // Simulate Background script updating storage
-            const changes = { 'translation_Future Song': { newValue: 'Future Romaji' } };
-            // listeners.forEach(l => l(changes, 'local')); 
+            // const changes = { 'translation_Future Song': { newValue: 'Future Romaji' } };
+            // listeners.forEach(l => l(changes, 'local'));
             // Instead of manual trigger, let's use the actual set method which triggers our mock listeners
             await mockBrowser.storage.local.set({ 'translation_Future Song': 'Future Romaji' });
 
