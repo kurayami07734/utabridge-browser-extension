@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TranslationService } from '../../src/services/TranslationService';
+import type { CachedTranslation } from '../../src/utils/types';
 
 // Mock the global 'browser' object
 const storageMap = new Map<string, unknown>();
@@ -39,6 +40,14 @@ const mockBrowser = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (global as any).browser = mockBrowser;
 
+// Helper to create a CachedTranslation object
+function createTranslation(romanized: string, translated: string): CachedTranslation {
+    return {
+        romanizedText: romanized,
+        translatedText: translated,
+    };
+}
+
 describe('TranslationService', () => {
     beforeEach(() => {
         storageMap.clear();
@@ -52,23 +61,32 @@ describe('TranslationService', () => {
             expect(result).toBeNull();
         });
 
-        it('should return value for existing cache', async () => {
-            storageMap.set('translation_Song Title', 'Romaji Title');
+        it('should return CachedTranslation object for existing cache', async () => {
+            const cachedValue = createTranslation('Romaji Title', 'Translated Title');
+            storageMap.set('translation_Song Title', cachedValue);
+
             const result = await TranslationService.get('Song Title');
-            expect(result).toBe('Romaji Title');
+
+            expect(result).toEqual(cachedValue);
+            expect(result?.romanizedText).toBe('Romaji Title');
+            expect(result?.translatedText).toBe('Translated Title');
         });
     });
 
     describe('set', () => {
-        it('should store value in cache', async () => {
-            await TranslationService.set('New Song', 'Romaji New');
-            expect(storageMap.get('translation_New Song')).toBe('Romaji New');
+        it('should store CachedTranslation object in cache', async () => {
+            const translation = createTranslation('Romaji New', 'Translated New');
+
+            await TranslationService.set('New Song', translation);
+
+            expect(storageMap.get('translation_New Song')).toEqual(translation);
         });
     });
 
     describe('observe', () => {
-        it('should return cached value immediately if available', () => {
-            storageMap.set('translation_Cached Song', 'Cached Romaji');
+        it('should return cached CachedTranslation immediately if available', () => {
+            const cachedValue = createTranslation('Cached Romaji', 'Cached Translation');
+            storageMap.set('translation_Cached Song', cachedValue);
             const callback = vi.fn();
 
             TranslationService.observe('Cached Song', callback);
@@ -77,7 +95,7 @@ describe('TranslationService', () => {
             // In the implementation, observe calls get().then().
             // use vi.waitFor to wait for the callback
             return vi.waitFor(() => {
-                expect(callback).toHaveBeenCalledWith('Cached Romaji');
+                expect(callback).toHaveBeenCalledWith(cachedValue);
                 expect(mockBrowser.runtime.sendMessage).not.toHaveBeenCalled();
             });
         });
@@ -96,7 +114,7 @@ describe('TranslationService', () => {
             });
         });
 
-        it('should notify listener when storage updates', async () => {
+        it('should notify listener when storage updates with CachedTranslation', async () => {
             const callback = vi.fn();
             TranslationService.observe('Future Song', callback);
 
@@ -104,14 +122,14 @@ describe('TranslationService', () => {
                 expect(callback).toHaveBeenCalledWith(null);
             });
 
-            // Simulate Background script updating storage
-            // const changes = { 'translation_Future Song': { newValue: 'Future Romaji' } };
-            // listeners.forEach(l => l(changes, 'local'));
-            // Instead of manual trigger, let's use the actual set method which triggers our mock listeners
-            await mockBrowser.storage.local.set({ 'translation_Future Song': 'Future Romaji' });
+            // Simulate Background script updating storage with a CachedTranslation object
+            const futureTranslation = createTranslation('Future Romaji', 'Future Translation');
+            await mockBrowser.storage.local.set({
+                'translation_Future Song': futureTranslation,
+            });
 
             await vi.waitFor(() => {
-                expect(callback).toHaveBeenCalledWith('Future Romaji');
+                expect(callback).toHaveBeenCalledWith(futureTranslation);
             });
         });
     });
