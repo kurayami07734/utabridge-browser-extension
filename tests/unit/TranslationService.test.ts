@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TranslationService } from '../../services/TranslationService';
+import { TranslationService } from '../../src/services/TranslationService';
 
 // Mock the global 'browser' object
 const storageMap = new Map<string, unknown>();

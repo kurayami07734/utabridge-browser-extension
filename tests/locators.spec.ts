@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
-import { SpotifyProfile } from '../replacer/profiles/SpotifyProfile';
+import { SpotifyProfile } from '../src/profiles/SpotifyProfile';
 
 const fixturesDir = path.resolve(process.cwd(), 'tests/fixtures');
 const htmlFixtures: Record<string, string> = {};
