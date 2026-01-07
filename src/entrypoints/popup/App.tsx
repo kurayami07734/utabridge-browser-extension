@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { isExtensionEnabled, primaryDisplay } from '../utils/storage';
-import type { PrimaryDisplay } from '../utils/types';
+import { isExtensionEnabled, primaryDisplay } from '@/utils/storage';
+import type { PrimaryDisplay } from '@/utils/types';
 
 function App() {
     const [enabled, setEnabled] = useState(true);

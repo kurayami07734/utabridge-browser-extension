@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DOMElement } from '../replacer/core/DOMElement';
-import { TranslationService } from '../services/TranslationService';
-import { primaryDisplay } from '../entrypoints/utils/storage';
-import type { CachedTranslation, PrimaryDisplay } from '../entrypoints/utils/types';
+import { DOMElement } from '@/core/DOMElement';
+import { TranslationService } from '@/services/TranslationService';
+import { primaryDisplay } from '@/utils/storage';
+import type { CachedTranslation, PrimaryDisplay } from '@/utils/types';
 
 interface Props {
     originalElement: HTMLElement;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getProfileForUrl, DOMElement, UB_PROCESSED_ATTR } from '../../replacer';
+import { getProfileForUrl, DOMElement, UB_PROCESSED_ATTR } from '@/index';
 
 export interface DiscoveredTarget {
     id: string;

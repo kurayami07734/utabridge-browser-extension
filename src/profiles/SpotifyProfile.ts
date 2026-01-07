@@ -1,5 +1,5 @@
-import { DOMElement } from '../core/DOMElement';
-import { WebsiteProfile } from '../core/WebsiteProfile';
+import { DOMElement } from '@/core/DOMElement';
+import { WebsiteProfile } from '@/core/WebsiteProfile';
 
 export class SpotifyProfile implements WebsiteProfile {
     name = 'Spotify';

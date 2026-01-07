@@ -1,5 +1,5 @@
-import type { CachedTranslation } from '../entrypoints/utils/types';
-import { ExtensionMessage } from '../entrypoints/utils/types';
+import type { CachedTranslation } from '@/utils/types';
+import { ExtensionMessage } from '@/utils/types';
 
 export class TranslationService {
     private static getCacheKey(text: string): string {

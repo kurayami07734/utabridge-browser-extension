@@ -1,10 +1,10 @@
 import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
 
-import { useDomObserver } from './hooks/useDomObserver';
-import { SongReplacer } from '../components/SongReplacer';
-import { isExtensionEnabled } from './utils/storage';
-import '../assets/style.css';
+import { useDomObserver } from '@/hooks/useDomObserver';
+import { SongReplacer } from '@/components/SongReplacer';
+import { isExtensionEnabled } from '@/utils/storage';
+import '@/assets/style.css';
 
 const ContentApp = () => {
     const [enabled, setEnabled] = useState(true);

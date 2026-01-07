@@ -1,7 +1,7 @@
-import { fetchTranslation } from '../services/api';
-import { RequestQueue } from '../services/RequestQueue';
-import { TranslationService } from '../services/TranslationService';
-import { ExtensionMessage } from './utils/types';
+import { fetchTranslation } from '@/services/api';
+import { RequestQueue } from '@/services/RequestQueue';
+import { TranslationService } from '@/services/TranslationService';
+import { ExtensionMessage } from '@/utils/types';
 
 export default defineBackground(() => {
     const queue = new RequestQueue(2);
