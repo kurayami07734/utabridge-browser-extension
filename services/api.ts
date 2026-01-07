@@ -1,31 +1,48 @@
-export const fetchTranslation = async (text: string): Promise<string> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+import type { TranslateResponse } from '../entrypoints/utils/types';
 
-    // Current logic from SongReplacer:
-    // "Static Romaji Title " + text
-    // Also handles " • " logic, but usually that logic is client side?
-    // The user said: "return the same static test as currently".
-    // The current UI logic (SongReplacer) handles the " • " splitting.
-    // Ideally, the API should return the *final* string, OR the UI handles formatting.
-    // "this api call should be queued... once finished it should notify"
-    // If the API returns the raw translation, the UI might still need to split.
-    // But usually translation APIs handle the whole text.
-    // Let's assume the API returns the "Romaji" version of the *whole* string or parts.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-    // Replicating logic:
-    const separator = ' • ';
-    if (text.includes(separator)) {
-        const parts = text.split(separator);
-        const replacedParts = parts.map((part) => {
-            // Check each part for CJK (simple check replication)
-            if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(part)) {
-                return `Static Romaji Title ${part}`;
-            }
-            return part;
-        });
-        return replacedParts.join(separator);
+/**
+ * Fetches translation and romanization from the API
+ * @param text - The text to translate
+ * @param from - Source language (default: 'ja')
+ * @param to - Target language (default: 'en')
+ * @returns TranslateResponse with translatedText and romanizedText
+ */
+export const fetchTranslation = async (
+    text: string,
+    from: string = 'ja',
+    to: string = 'en'
+): Promise<TranslateResponse> => {
+    const url = new URL('/api/translate', API_BASE_URL);
+    url.searchParams.set('text', text);
+    url.searchParams.set('from', from);
+    url.searchParams.set('to', to);
+
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+        throw new Error(`Translation API error: ${response.status} ${response.statusText}`);
     }
 
-    return `Static Romaji Title ${text}`;
+    const data: TranslateResponse = await response.json();
+    return data;
+};
+
+/**
+ * Checks if the API is healthy
+ * @returns true if API is healthy
+ */
+export const checkApiHealth = async (): Promise<boolean> => {
+    try {
+        const url = new URL('/api/health', API_BASE_URL);
+        const response = await fetch(url.toString());
+
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        return data.health === 'ok' || data.health === 'UP';
+    } catch {
+        return false;
+    }
 };

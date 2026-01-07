@@ -1,3 +1,4 @@
+import type { CachedTranslation } from '../entrypoints/utils/types';
 import { ExtensionMessage } from '../entrypoints/utils/types';
 
 export class TranslationService {
@@ -5,18 +6,18 @@ export class TranslationService {
         return `translation_${text}`;
     }
 
-    static async get(text: string): Promise<string | null> {
+    static async get(text: string): Promise<CachedTranslation | null> {
         try {
             const key = this.getCacheKey(text);
             const stored = await browser.storage.local.get(key);
-            return (stored[key] as string) || null;
+            return (stored[key] as CachedTranslation) || null;
         } catch (e) {
             console.error('[TranslationService] Error getting from cache', e);
             return null;
         }
     }
 
-    static async set(text: string, translation: string): Promise<void> {
+    static async set(text: string, translation: CachedTranslation): Promise<void> {
         try {
             const key = this.getCacheKey(text);
             await browser.storage.local.set({ [key]: translation });
@@ -36,7 +37,10 @@ export class TranslationService {
         }
     }
 
-    static observe(text: string, onUpdate: (translation: string | null) => void): () => void {
+    static observe(
+        text: string,
+        onUpdate: (translation: CachedTranslation | null) => void
+    ): () => void {
         const key = this.getCacheKey(text);
         let active = true;
 
@@ -44,7 +48,7 @@ export class TranslationService {
         const listener = (changes: Record<string, { newValue?: unknown }>, areaName: string) => {
             if (areaName === 'local' && changes[key]) {
                 if (active) {
-                    onUpdate(changes[key].newValue as string);
+                    onUpdate(changes[key].newValue as CachedTranslation);
                 }
             }
         };
