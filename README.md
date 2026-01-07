@@ -5,6 +5,10 @@
 A project to help non-japanese speakers read the song titles, artist titles
 and more in their native script. Originally intended to be used with spotify.
 
+## Video Demo
+
+https://github.com/user-attachments/assets/2fd5cb99-017f-40cc-8f6c-5c95cff94c82
+
 ## Architecture
 
 This extension uses a profile-based architecture to manage element targeting across different websites.
