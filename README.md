@@ -1,34 +1,62 @@
-# UtaBridge
+# 🎵 UtaBridge
 
 [![CI checks](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/kurayami07734/utabridge-browser-extension/actions/workflows/ci.yml)
 
-A project to help non-japanese speakers read the song titles, artist titles
-and more in their native script. Originally intended to be used with spotify.
+**UtaBridge** is a browser extension that translates Japanese song titles, artist names, and album names on Spotify into readable romanized or translated text.
 
-## Video Demo
+## ✨ What It Does
+
+Ever been listening to a great J-Pop playlist and wished you could read the song titles? UtaBridge automatically:
+
+- 🔤 **Romanizes** Japanese text (e.g., `夜に駆ける` → `Yoru ni Kakeru`)
+- 🌐 **Translates** to English (e.g., `夜に駆ける` → `Racing into the Night`)
+- 💬 **Shows both** – hover over any title to see the alternative version
+
+## 🎬 Video Demo
 
 https://github.com/user-attachments/assets/2fd5cb99-017f-40cc-8f6c-5c95cff94c82
 
-## Architecture
+## 🚀 Getting Started
 
-This extension uses a profile-based architecture to manage element targeting across different websites.
+### Installation
 
-### Class Hierarchy
+1. Download the latest release from the [Releases page](https://github.com/kurayami07734/utabridge-browser-extension/releases)
+2. Unzip the file
+3. Open Chrome and go to `chrome://extensions/`
+4. Enable "Developer mode" (toggle in top right)
+5. Click "Load unpacked" and select the unzipped folder
+6. Open [Spotify Web Player](https://open.spotify.com) and enjoy!
 
-- **`WebsiteProfile`** (`strategies/core/WebsiteProfile.ts`)
-    - Defines the contract for a website configuration.
-    - Each profile supports a specific domain (e.g., `open.spotify.com`) and contains a list of targeted elements.
+### Usage
 
-- **`SpotifyProfile`** (`strategies/profiles/SpotifyProfile.ts`)
-    - The concrete implementation for Spotify.
-    - Defines the list of all UI elements (strategies) that UtaBridge interacts with on Spotify.
+- **Toggle** the extension on/off from the popup menu
+- **Switch** between showing romanization or translation as the primary display
+- **Hover** over any translated text to see the alternative version
 
-- **`DOMElement`** (`strategies/core/DOMElement.ts`)
-    - Represents a single targetable UI component (e.g., "Now Playing Title", "Track Row").
-    - **Fluent API**: Configured via chainable methods (e.g., `.withId(...)`, `.asDetached()`).
-    - **Injection Logic**: Handles creating the React mount point, either as a sibling (standard) or appended to the body (detached).
+## 🛠️ Development
 
-### Core Concepts
+```bash
+# Install dependencies
+pnpm install
 
-- **Standard Injection**: The tooltip anchor is injected directly next to the target element in the DOM. Used for static content.
-- **Detached Injection** (`.asDetached()`): The tooltip anchor is injected into `document.body`. This is required for React-heavy UIs (like Spotify) where modifying the React-managed DOM structure directly can cause crashes or content implementation issues.
+# Start development server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Run tests
+pnpm test
+```
+
+## 📖 Documentation
+
+For detailed technical documentation, see [DOCUMENTATION.md](./DOCUMENTATION.md).
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read the [documentation](./DOCUMENTATION.md) first to understand the codebase.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
