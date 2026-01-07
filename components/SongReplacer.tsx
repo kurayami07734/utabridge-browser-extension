@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 
 import { DOMElement } from '../replacer/core/DOMElement';
 import { TranslationService } from '../services/TranslationService';
+import { primaryDisplay } from '../entrypoints/utils/storage';
+import type { CachedTranslation, PrimaryDisplay } from '../entrypoints/utils/types';
 
 interface Props {
     originalElement: HTMLElement;
@@ -13,14 +15,21 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
     const [currentText, setCurrentText] = useState(strategy.getOriginalText(originalElement));
     const [isHovered, setIsHovered] = useState(false);
 
-    const [translation, setTranslation] = useState<string | null>(null);
+    const [translation, setTranslation] = useState<CachedTranslation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [displayPref, setDisplayPref] = useState<PrimaryDisplay>('romanization');
 
     const lastReplacementRef = useRef<string | null>(null);
 
     const hasNonAscii = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(
         currentText
     );
+
+    // Watch for display preference changes
+    useEffect(() => {
+        primaryDisplay.getValue().then(setDisplayPref);
+        return primaryDisplay.watch(setDisplayPref);
+    }, []);
 
     useLayoutEffect(() => {
         const observer = new MutationObserver(() => {
@@ -58,6 +67,14 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
         };
     }, [currentText, hasNonAscii]);
 
+    // Get secondary text for tooltip based on user preference
+    const getSecondaryText = (): string => {
+        if (!translation) return currentText;
+        return displayPref === 'romanization'
+            ? translation.translatedText
+            : translation.romanizedText;
+    };
+
     useLayoutEffect(() => {
         if (!hasNonAscii) {
             // Restore original if needed
@@ -74,7 +91,11 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
         if (isLoading) {
             newContent = `(Wait...) ${currentText}`;
         } else if (translation) {
-            newContent = translation;
+            // Inline primary text calculation
+            newContent =
+                displayPref === 'romanization'
+                    ? translation.romanizedText
+                    : translation.translatedText;
         }
 
         // Apply replacement
@@ -88,7 +109,7 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
                 strategy.applyReplacement(originalElement, currentText);
             }
         };
-    }, [currentText, translation, isLoading, hasNonAscii, originalElement, strategy]);
+    }, [currentText, translation, isLoading, hasNonAscii, originalElement, strategy, displayPref]);
 
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
@@ -130,6 +151,9 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
         ? "mt-2 after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-b-[#282828] after:border-x-transparent after:border-t-transparent"
         : "-translate-y-full mb-2 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-[6px] after:border-t-[#282828] after:border-x-transparent after:border-b-transparent";
 
+    // Show secondary text in tooltip (the one not shown as primary)
+    const tooltipContent = translation ? getSecondaryText() : currentText;
+
     return createPortal(
         isHovered && (
             <div
@@ -140,7 +164,7 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
                     padding: '6px',
                 }}
             >
-                {currentText}
+                {tooltipContent}
             </div>
         ),
         document.body

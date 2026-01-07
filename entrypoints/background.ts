@@ -26,11 +26,14 @@ export default defineBackground(() => {
 
         queue.add(async () => {
             try {
-                const result = await fetchTranslation(text);
-                await TranslationService.set(text, result);
+                const result = await fetchTranslation(text, 'ja', 'en');
+                // Store both translatedText and romanizedText
+                await TranslationService.set(text, {
+                    translatedText: result.translatedText,
+                    romanizedText: result.romanizedText,
+                });
             } catch (e) {
                 console.error('Translation failed for:', text, e);
-                // Optionally handle split retry logic or error states here
             } finally {
                 pendingRequests.delete(text);
             }
