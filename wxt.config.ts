@@ -10,7 +10,8 @@ export default defineConfig({
         description: 'Seamlessly translate and romanize Japanese song titles on Spotify.',
         version: '0.1.0',
         short_name: 'UtaBridge',
-        permissions: ['storage'],
+        key: import.meta.env.VITE_EXTENSION_PUBLIC_KEY,
+        permissions: ['storage', 'identity'],
         host_permissions: ['*://open.spotify.com/*'],
         browser_specific_settings: {
             gecko: {
