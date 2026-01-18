@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isExtensionEnabled, primaryDisplay } from '@/utils/storage';
 import type { PrimaryDisplay } from '@/utils/types';
+import { AuthButton } from './components/AuthButton';
 
 function App() {
     const [enabled, setEnabled] = useState(true);
@@ -40,6 +41,11 @@ function App() {
                 <p className="text-xs text-zinc-400 text-center leading-snug">
                     Translating your music world
                 </p>
+            </div>
+
+            {/* Auth Section */}
+            <div className="w-full mb-4">
+                <AuthButton />
             </div>
 
             {/* Enable Toggle */}
