@@ -1,48 +1,93 @@
-import type { TranslateResponse } from '../entrypoints/utils/types';
+import { AuthService } from './auth';
+import { InvalidTokenError, RateLimitError, ApiError } from '@/utils/errors';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-/**
- * Fetches translation and romanization from the API
- * @param text - The text to translate
- * @param from - Source language (default: 'ja')
- * @param to - Target language (default: 'en')
- * @returns TranslateResponse with translatedText and romanizedText
- */
-export const fetchTranslation = async (
-    text: string,
-    from: string = 'ja',
-    to: string = 'en'
-): Promise<TranslateResponse> => {
-    const url = new URL('/api/translate', API_BASE_URL);
-    url.searchParams.set('text', text);
-    url.searchParams.set('from', from);
-    url.searchParams.set('to', to);
+interface LocalizeRequest {
+    text: string;
+    fromLanguage: string;
+    toLanguage: string;
+}
 
-    const response = await fetch(url.toString());
+interface LocalizeResponse {
+    translatedText: string;
+    romanizedText: string;
+}
 
-    if (!response.ok) {
-        throw new Error(`Translation API error: ${response.status} ${response.statusText}`);
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+    const authToken = await AuthService.getAuthToken();
+    if (!authToken) {
+        throw new InvalidTokenError('No auth token available');
     }
 
-    const data: TranslateResponse = await response.json();
-    return data;
-};
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+        },
+    });
 
-/**
- * Checks if the API is healthy
- * @returns true if API is healthy
- */
-export const checkApiHealth = async (): Promise<boolean> => {
+    return response;
+}
+
+export async function fetchTranslation(
+    text: string,
+    fromLanguage: string = 'ja',
+    toLanguage: string = 'en',
+    maxRetries: number = 1
+): Promise<LocalizeResponse> {
+    const requestBody: LocalizeRequest = { text, fromLanguage, toLanguage };
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        let response: Response;
+
+        try {
+            response = await fetchWithAuth(`${API_BASE_URL}/api/localize`, {
+                method: 'POST',
+                body: JSON.stringify(requestBody),
+            });
+        } catch (error) {
+            if (attempt === maxRetries) throw error;
+            continue;
+        }
+
+        if (response.ok) {
+            return await response.json();
+        }
+
+        if (response.status === 401 && attempt < maxRetries) {
+            const newTokens = await AuthService.refresh();
+            if (!newTokens) {
+                throw new InvalidTokenError('Refresh failed - please sign in again');
+            }
+            continue;
+        }
+
+        if (response.status === 429) {
+            throw new RateLimitError('Too many requests');
+        }
+
+        if (response.status === 400) {
+            const error = await response.json();
+            throw new ApiError(error.message || 'Invalid request', 400, 'VALIDATION_ERROR');
+        }
+
+        const errorText = await response.text();
+        throw new ApiError(errorText, response.status, 'API_ERROR');
+    }
+
+    throw new Error('Max retries exceeded');
+}
+
+export async function checkApiHealth(): Promise<boolean> {
     try {
-        const url = new URL('/api/health', API_BASE_URL);
-        const response = await fetch(url.toString());
-
+        const response = await fetch(`${API_BASE_URL}/api/health`);
         if (!response.ok) return false;
-
         const data = await response.json();
         return data.health === 'ok' || data.health === 'UP';
     } catch {
         return false;
     }
-};
+}

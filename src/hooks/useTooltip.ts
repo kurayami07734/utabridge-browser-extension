@@ -10,6 +10,7 @@ interface UseTooltipResult {
     isVisible: boolean;
     position: Position;
     placement: TooltipPlacement;
+    setIsVisible: (visible: boolean) => void;
 }
 
 /**
@@ -55,5 +56,5 @@ export function useTooltip(
         };
     }, [element, enabled, placement]);
 
-    return { isVisible, position, placement };
+    return { isVisible, position, placement, setIsVisible };
 }

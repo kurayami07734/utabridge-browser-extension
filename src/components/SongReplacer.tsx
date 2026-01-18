@@ -45,7 +45,7 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
     }, [shouldProcess, reset]);
 
     // Handle tooltip hover state and position
-    const { isVisible, position, placement } = useTooltip(
+    const { isVisible, position, placement, setIsVisible } = useTooltip(
         originalElement,
         shouldProcess,
         strategy.tooltipPlacement
@@ -69,8 +69,15 @@ export const SongReplacer: React.FC<Props> = ({ originalElement, strategy }) => 
     // Determine tooltip content (secondary text)
     const tooltipContent = translation ? getSecondaryText(translation, displayPref) : currentText;
 
+    const handleDismiss = () => setIsVisible(false);
+
     return (
-        <Tooltip isVisible={isVisible} position={position} placement={placement}>
+        <Tooltip
+            isVisible={isVisible}
+            position={position}
+            placement={placement}
+            onDismiss={handleDismiss}
+        >
             {tooltipContent}
         </Tooltip>
     );
