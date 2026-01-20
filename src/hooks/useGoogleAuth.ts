@@ -3,14 +3,6 @@ import { AuthService } from '@/services/auth';
 import { userInfo } from '@/utils/storage';
 import type { UserInfo } from '@/types/auth';
 
-interface IdentityTokenResult {
-    token: string;
-}
-
-interface IdentityTokenArray {
-    token: string;
-}
-
 export function useGoogleAuth() {
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
@@ -29,17 +21,38 @@ export function useGoogleAuth() {
 
     const signIn = useCallback(async () => {
         try {
-            const tokenResponse = await (
-                browser.identity as unknown as {
-                    getAuthToken(options: { interactive: boolean }): Promise<IdentityTokenResult>;
-                }
-            ).getAuthToken({ interactive: true });
-            const googleToken = tokenResponse.token;
+            const redirectUrl = browser.identity.getRedirectURL() || '';
+            const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-            await AuthService.login(googleToken);
+            const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+            authUrl.searchParams.set('client_id', clientId);
+            authUrl.searchParams.set('response_type', 'id_token');
+            authUrl.searchParams.set('access_type', 'offline');
+            authUrl.searchParams.set('redirect_uri', redirectUrl);
+            authUrl.searchParams.set('scope', 'openid email profile');
+            authUrl.searchParams.set('nonce', crypto.randomUUID());
+
+            const responseUrl = await browser.identity.launchWebAuthFlow({
+                url: authUrl.toString(),
+                interactive: true,
+            });
+
+            if (!responseUrl) {
+                throw new Error('No response URL received');
+            }
+
+            const url = new URL(responseUrl);
+            const hashParams = new URLSearchParams(url.hash.slice(1));
+            const idToken = hashParams.get('id_token');
+
+            if (!idToken) {
+                throw new Error('No ID token received');
+            }
+
+            await AuthService.login(idToken);
 
             const userInfoResponse = await fetch(
-                `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${googleToken}`
+                `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${idToken}`
             );
             const googleUser = await userInfoResponse.json();
 
@@ -58,14 +71,6 @@ export function useGoogleAuth() {
     }, []);
 
     const signOut = useCallback(async () => {
-        const identityApi = browser.identity as unknown as {
-            getAuthToken(options: object): Promise<IdentityTokenArray[]>;
-            removeCachedAuthToken(options: { token: string }): Promise<void>;
-        };
-        const tokens = await identityApi.getAuthToken({});
-        if (tokens.length > 0) {
-            await identityApi.removeCachedAuthToken({ token: tokens[0].token });
-        }
         await AuthService.logout();
         setIsSignedIn(false);
         setCurrentUser(null);
