@@ -49,17 +49,8 @@ export function useGoogleAuth() {
                 throw new Error('No ID token received');
             }
 
-            await AuthService.login(idToken);
+            const { user } = await AuthService.login(idToken);
 
-            const userInfoResponse = await fetch(
-                `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${idToken}`
-            );
-            const googleUser = await userInfoResponse.json();
-
-            const user: UserInfo = {
-                email: googleUser.email,
-                name: googleUser.name,
-            };
             await userInfo.setValue(user);
 
             setIsSignedIn(true);
@@ -71,7 +62,7 @@ export function useGoogleAuth() {
     }, []);
 
     const signOut = useCallback(async () => {
-        await AuthService.logout();
+        await userInfo.setValue(null);
         setIsSignedIn(false);
         setCurrentUser(null);
     }, []);

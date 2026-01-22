@@ -5,8 +5,8 @@ export interface AuthTokens {
 }
 
 export interface UserInfo {
-    email: string;
-    name?: string;
+    name: string;
+    pictureUrl: string | null;
 }
 
 export interface AuthState {

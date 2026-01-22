@@ -1,10 +1,16 @@
 import { authTokens, userInfo } from '@/utils/storage';
-import type { AuthTokens } from '@/types/auth';
+import type { AuthTokens, UserInfo } from '@/types/auth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
+interface LoginResponse {
+    authToken: string;
+    refreshToken: string;
+    user: UserInfo;
+}
+
 export class AuthService {
-    static async login(googleToken: string): Promise<AuthTokens> {
+    static async login(googleToken: string): Promise<LoginResponse> {
         const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -22,7 +28,13 @@ export class AuthService {
         };
 
         await authTokens.setValue(tokens);
-        return tokens;
+        await userInfo.setValue(data.user);
+
+        return {
+            authToken: data.authToken,
+            refreshToken: data.refreshToken,
+            user: data.user,
+        };
     }
 
     static async refresh(): Promise<AuthTokens | null> {
@@ -36,7 +48,8 @@ export class AuthService {
         });
 
         if (!response.ok) {
-            await this.logout();
+            await authTokens.setValue(null);
+            await userInfo.setValue(null);
             return null;
         }
 
@@ -48,11 +61,6 @@ export class AuthService {
 
         await authTokens.setValue(newTokens);
         return newTokens;
-    }
-
-    static async logout(): Promise<void> {
-        await authTokens.setValue(null);
-        await userInfo.setValue(null);
     }
 
     static async getAuthToken(): Promise<string | null> {
