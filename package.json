@@ -22,6 +22,9 @@
         "format:check": "prettier --check ."
     },
     "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/material": "^7.3.7",
         "@tailwindcss/vite": "^4.1.18",
         "init": "^0.1.2",
         "pnpm": "^10.26.1",
