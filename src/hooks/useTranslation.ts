@@ -11,8 +11,16 @@ interface UseTranslationResult {
 /**
  * Hook to subscribe to translation updates for the given text.
  * Handles loading state and caching via TranslationService.
+ *
+ * @param text - The text to translate
+ * @param sourceLanguage - Detected source language code (e.g., 'ja', 'ko')
+ * @param enabled - Whether translation is enabled for this text
  */
-export function useTranslation(text: string, enabled: boolean): UseTranslationResult {
+export function useTranslation(
+    text: string,
+    sourceLanguage: string,
+    enabled: boolean
+): UseTranslationResult {
     const [translation, setTranslation] = useState<CachedTranslation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +35,7 @@ export function useTranslation(text: string, enabled: boolean): UseTranslationRe
             return;
         }
 
-        const unsubscribe = TranslationService.observe(text, (result) => {
+        const unsubscribe = TranslationService.observe(text, sourceLanguage, (result) => {
             if (result) {
                 setTranslation(result);
                 setIsLoading(false);
@@ -38,7 +46,7 @@ export function useTranslation(text: string, enabled: boolean): UseTranslationRe
         });
 
         return unsubscribe;
-    }, [text, enabled, reset]);
+    }, [text, sourceLanguage, enabled, reset]);
 
     return { translation, isLoading, reset };
 }
