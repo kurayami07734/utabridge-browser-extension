@@ -1,12 +1,15 @@
 import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-import { useDomObserver } from '@/hooks/useDomObserver';
-import { SongReplacer } from '@/components/SongReplacer';
+import { useDomScanner } from '@/hooks/useDomScanner';
+import { TextReplacer } from '@/components/TextReplacer';
 import { isExtensionEnabled } from '@/utils/storage';
 import '@/assets/style.css';
 
-const ContentApp = () => {
+const darkTheme = createTheme({ palette: { mode: 'dark' } });
+
+function App() {
     const [enabled, setEnabled] = useState(true);
 
     useEffect(() => {
@@ -14,29 +17,25 @@ const ContentApp = () => {
         return isExtensionEnabled.watch(setEnabled);
     }, []);
 
-    const targets = useDomObserver(enabled);
+    const targets = useDomScanner(enabled);
+
     return (
-        <>
-            {targets.map((target) => (
-                <SongReplacer
-                    key={target.id}
-                    originalElement={target.originalElement}
-                    strategy={target.strategy}
-                />
+        <ThemeProvider theme={darkTheme}>
+            {targets.map((t) => (
+                <TextReplacer key={t.uid} el={t.el} target={t.target} />
             ))}
-        </>
+        </ThemeProvider>
     );
-};
+}
 
 export default defineContentScript({
     matches: ['*://open.spotify.com/*'],
     cssInjectionMode: 'manifest',
 
-    main(_ctx) {
-        const appRoot = document.createElement('div');
-        appRoot.id = 'utabridge-orchestrator';
-        document.body.appendChild(appRoot);
-
-        ReactDOM.createRoot(appRoot).render(<ContentApp />);
+    main() {
+        const root = document.createElement('div');
+        root.id = 'utabridge-root';
+        document.body.appendChild(root);
+        ReactDOM.createRoot(root).render(<App />);
     },
 });
