@@ -34,3 +34,5 @@ web-ext.config.ts
 /playwright-report/
 /blob-report/
 .tmp/
+
+.agent/

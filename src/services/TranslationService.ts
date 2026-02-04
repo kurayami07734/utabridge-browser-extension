@@ -26,11 +26,12 @@ export class TranslationService {
         }
     }
 
-    private static async requestApi(text: string): Promise<void> {
+    private static async requestApi(text: string, sourceLanguage: string): Promise<void> {
         try {
             await browser.runtime.sendMessage({
                 type: 'REQUEST_TRANSLATION',
                 text: text,
+                sourceLanguage: sourceLanguage,
             } as ExtensionMessage);
         } catch (e) {
             console.error('[TranslationService] Failed to send translation request', e);
@@ -39,6 +40,7 @@ export class TranslationService {
 
     static observe(
         text: string,
+        sourceLanguage: string,
         onUpdate: (translation: CachedTranslation | null) => void
     ): () => void {
         const key = this.getCacheKey(text);
@@ -65,7 +67,7 @@ export class TranslationService {
             } else {
                 // 3. If NOT in cache, request it
                 onUpdate(null); // Explicitly say "I don't have it yet"
-                this.requestApi(text);
+                this.requestApi(text, sourceLanguage);
             }
         });
 
