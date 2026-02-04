@@ -28,3 +28,39 @@
 .ub-animate-marquee:hover {
     animation-play-state: paused;
 }
+
+/* Subtle loading state for text being translated */
+@keyframes ub-pulse {
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+.ub-loading {
+    animation: ub-pulse 1.5s ease-in-out infinite;
+}
+
+/* Custom Tippy theme for Spotify */
+.tippy-box[data-theme~='spotify'] {
+    background-color: #282828;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-family:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.tippy-box[data-theme~='spotify'] > .tippy-arrow::before {
+    color: #282828;
+}
+
+.tippy-box[data-theme~='spotify'] > .tippy-content {
+    padding: 6px 10px;
+}

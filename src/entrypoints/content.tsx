@@ -1,12 +1,12 @@
 import ReactDOM from 'react-dom/client';
 import { useEffect, useState } from 'react';
 
-import { useDomObserver } from '@/hooks/useDomObserver';
-import { SongReplacer } from '@/components/SongReplacer';
+import { useDomScanner } from '@/hooks/useDomScanner';
+import { TextReplacer } from '@/components/TextReplacer';
 import { isExtensionEnabled } from '@/utils/storage';
 import '@/assets/style.css';
 
-const ContentApp = () => {
+function App() {
     const [enabled, setEnabled] = useState(true);
 
     useEffect(() => {
@@ -14,29 +14,31 @@ const ContentApp = () => {
         return isExtensionEnabled.watch(setEnabled);
     }, []);
 
-    const targets = useDomObserver(enabled);
+    // useDomScanner returns targets and a reset function
+    const { targets, reset } = useDomScanner(enabled);
+
+    // Clear targets when extension is disabled to unmount TextReplacers
+    // (which triggers their cleanup to restore original text)
+    useEffect(() => {
+        if (!enabled) reset();
+    }, [enabled, reset]);
+
     return (
         <>
-            {targets.map((target) => (
-                <SongReplacer
-                    key={target.id}
-                    originalElement={target.originalElement}
-                    strategy={target.strategy}
-                />
-            ))}
+            {enabled &&
+                targets.map((t) => <TextReplacer key={t.uid} el={t.el} target={t.target} />)}
         </>
     );
-};
+}
 
 export default defineContentScript({
     matches: ['*://open.spotify.com/*'],
     cssInjectionMode: 'manifest',
 
-    main(_ctx) {
-        const appRoot = document.createElement('div');
-        appRoot.id = 'utabridge-orchestrator';
-        document.body.appendChild(appRoot);
-
-        ReactDOM.createRoot(appRoot).render(<ContentApp />);
+    main() {
+        const root = document.createElement('div');
+        root.id = 'utabridge-root';
+        document.body.appendChild(root);
+        ReactDOM.createRoot(root).render(<App />);
     },
 });

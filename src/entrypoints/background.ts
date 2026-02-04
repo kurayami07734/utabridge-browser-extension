@@ -20,11 +20,11 @@ export default defineBackground(() => {
     browser.runtime.onMessage.addListener((message: unknown) => {
         const msg = message as ExtensionMessage;
         if (msg && msg.type === 'REQUEST_TRANSLATION' && msg.text) {
-            handleTranslationRequest(msg.text);
+            handleTranslationRequest(msg.text, msg.sourceLanguage);
         }
     });
 
-    async function handleTranslationRequest(text: string) {
+    async function handleTranslationRequest(text: string, sourceLanguage: string) {
         const isHealthy = await apiHealth.getValue();
         if (!isHealthy) {
             console.warn('[Background] API unhealthy, skipping translation request');
@@ -41,7 +41,8 @@ export default defineBackground(() => {
 
         queue.add(async () => {
             try {
-                const result = await fetchTranslation(text, 'ja', 'en');
+                // Use detected source language instead of hardcoded 'ja'
+                const result = await fetchTranslation(text, sourceLanguage, 'en');
                 await TranslationService.set(text, {
                     translatedText: result.translatedText,
                     romanizedText: result.romanizedText,
