@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>UtaBridge - Translate & Romanize Japanese Song Titles on Spotify</title>
+        <meta
+            name="description"
+            content="UtaBridge is a browser extension that automatically translates and romanizes Japanese song titles on Spotify. Understand your music instantly."
+        />
+        <meta name="theme-color" content="#0a0a0f" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="icon" type="image/png" href="icon128.png" />
+    </head>
+    <body>
+        <header class="header">
+            <nav class="nav container">
+                <a href="index.html" class="logo">
+                    <img src="icon128.png" alt="UtaBridge Logo" class="logo-icon" />
+                    <span>UtaBridge</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li>
+                        <a
+                            href="https://github.com/kurayami07734/utabridge-browser-extension"
+                            target="_blank"
+                            rel="noopener"
+                            ><i class="fab fa-github"></i> Support</a
+                        >
+                    </li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Understand Your Music. <span class="highlight">Instantly.</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Automatically translate and romanize Japanese song titles on Spotify.
+                            Experience your favorite Japanese music without language barriers.
+                        </p>
+                        <a
+                            href="#"
+                            class="cta-button"
+                            onclick="
+                                event.preventDefault();
+                                alert('Coming soon to Chrome Web Store!');
+                            "
+                        >
+                            <i class="fas fa-plus-circle"></i>
+                            Add to Browser
+                            <span class="coming-soon">(Coming Soon)</span>
+                        </a>
+                        <div class="hero-badges">
+                            <span class="badge"><i class="fas fa-shield-alt"></i> Secure</span>
+                            <span class="badge"><i class="fas fa-bolt"></i> Fast</span>
+                            <span class="badge"><i class="fas fa-lock"></i> Private</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="container">
+                    <h2 class="section-title">Why UtaBridge?</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-language"></i>
+                            </div>
+                            <h3>Real-time Romanization</h3>
+                            <p>
+                                Watch Japanese song titles instantly transform into readable
+                                romanized text as you listen. No more awkward copy-pasting.
+                            </p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h3>English Translations</h3>
+                            <p>
+                                Get accurate English translations alongside romanized text.
+                                Understand the meaning behind every lyric and title.
+                            </p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-feather-alt"></i>
+                            </div>
+                            <h3>Lightweight & Secure</h3>
+                            <p>
+                                Minimal resource usage with zero bloat. Your data stays yours — we
+                                don't sell or share anything with third parties.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="how-it-works">
+                <div class="container">
+                    <h2 class="section-title">How It Works</h2>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Install the Extension</h3>
+                                <p>
+                                    Add UtaBridge to your browser from the Chrome Web Store (coming
+                                    soon).
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Sign In with Google</h3>
+                                <p>
+                                    Sign in with your Google account to authenticate and personalize
+                                    your experience.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Enjoy Your Music</h3>
+                                <p>
+                                    Play any Japanese song and see translations appear instantly on
+                                    your screen.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="privacy-highlight">
+                <div class="container">
+                    <div class="privacy-card">
+                        <i class="fas fa-user-shield privacy-icon"></i>
+                        <div class="privacy-content">
+                            <h3>Your Privacy Matters</h3>
+                            <p>
+                                UtaBridge only collects your name, email, and profile picture
+                                through Google OAuth for authentication. We do not store, sell, or
+                                share your personal data with anyone.
+                                <a href="privacy.html">Read our full Privacy Policy →</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <a href="index.html" class="logo">
+                            <img src="icon128.png" alt="UtaBridge Logo" class="logo-icon" />
+                            <span>UtaBridge</span>
+                        </a>
+                        <p class="footer-tagline">
+                            Breaking language barriers in music, one song at a time.
+                        </p>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Links</h4>
+                        <ul>
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="privacy.html">Privacy Policy</a></li>
+                            <li><a href="terms.html">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-social">
+                        <h4>Connect</h4>
+                        <a
+                            href="https://github.com/kurayami07734/utabridge-browser-extension"
+                            target="_blank"
+                            rel="noopener"
+                            class="social-link"
+                        >
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="mailto:adityaghidora@gmail.com" class="social-link">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2026 UtaBridge. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </body>
+</html>
