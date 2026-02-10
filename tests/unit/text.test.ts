@@ -1,118 +1,78 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
-    isAsciiOnly,
-    detectLanguage,
+    isMostlyLatin,
     parseCompoundText,
     reconstructText,
     getTranslatableSegments,
 } from '../../src/utils/text';
 
-// Mock chrome.i18n.detectLanguage for unit tests
-const mockDetectLanguage = vi.fn();
-vi.stubGlobal('chrome', {
-    i18n: {
-        detectLanguage: mockDetectLanguage,
-    },
-});
-
 describe('text utilities', () => {
-    beforeEach(() => {
-        mockDetectLanguage.mockReset();
-    });
+    // ─── Script Detection ────────────────────────────────────────────────────
 
-    // ─── ASCII Detection ─────────────────────────────────────────────────────
-
-    describe('isAsciiOnly', () => {
-        it('returns true for ASCII text', () => {
-            expect(isAsciiOnly('Hello World')).toBe(true);
-            expect(isAsciiOnly('123 ABC xyz')).toBe(true);
-            expect(isAsciiOnly('')).toBe(true);
+    describe('isMostlyLatin', () => {
+        it('returns true for plain English text', () => {
+            expect(isMostlyLatin('Hello World')).toBe(true);
+            expect(isMostlyLatin('123 ABC xyz')).toBe(true);
+            expect(isMostlyLatin('Spotify')).toBe(true);
         });
 
-        it('returns false for non-ASCII text', () => {
-            expect(isAsciiOnly('こんにちは')).toBe(false);
-            expect(isAsciiOnly('Hello 世界')).toBe(false);
-            expect(isAsciiOnly('안녕하세요')).toBe(false);
-            expect(isAsciiOnly('Playlist • Artist')).toBe(false); // • is not ASCII
-        });
-    });
-
-    // ─── Async Language Detection ────────────────────────────────────────────
-
-    describe('detectLanguage', () => {
-        it('skips ASCII-only text', async () => {
-            const result = await detectLanguage('Hello World');
-            expect(result).toEqual({
-                text: 'Hello World',
-                language: null,
-                needsTranslation: false,
-            });
-            expect(mockDetectLanguage).not.toHaveBeenCalled();
+        it('returns true for empty or punctuation-only text', () => {
+            expect(isMostlyLatin('')).toBe(true);
+            expect(isMostlyLatin('123')).toBe(true);
+            expect(isMostlyLatin('---')).toBe(true);
         });
 
-        it('detects Japanese text', async () => {
-            mockDetectLanguage.mockImplementation((_, cb) => {
-                cb({ languages: [{ language: 'ja', percentage: 95 }] });
-            });
-
-            const result = await detectLanguage('大原ゆい子');
-            expect(result).toEqual({
-                text: '大原ゆい子',
-                language: 'ja',
-                needsTranslation: true,
-            });
+        it('returns true for German text (Latin + diacritics)', () => {
+            expect(isMostlyLatin('Ärger über Brücke')).toBe(true);
+            expect(isMostlyLatin('Straße')).toBe(true);
         });
 
-        it('sends any detected language to backend', async () => {
-            // Use French text with non-ASCII character so it passes the ASCII check
-            mockDetectLanguage.mockImplementation((_, cb) => {
-                cb({ languages: [{ language: 'fr', percentage: 90 }] });
-            });
-
-            const result = await detectLanguage('Café résumé');
-            expect(result.language).toBe('fr');
-            expect(result.needsTranslation).toBe(true);
+        it('returns true for French text (Latin + accents)', () => {
+            expect(isMostlyLatin('Café résumé')).toBe(true);
+            expect(isMostlyLatin('Château élégant')).toBe(true);
         });
 
-        it('uses "und" for low confidence detection', async () => {
-            mockDetectLanguage.mockImplementation((_, cb) => {
-                cb({ languages: [{ language: 'unknown', percentage: 30 }] });
-            });
+        it('returns true for Spanish text (Latin + tildes)', () => {
+            expect(isMostlyLatin('Niño español')).toBe(true);
+        });
 
-            const result = await detectLanguage('Some mixed テキスト');
-            expect(result.language).toBe('und'); // undetermined
-            expect(result.needsTranslation).toBe(true);
+        it('returns false for Japanese text', () => {
+            expect(isMostlyLatin('こんにちは')).toBe(false);
+            expect(isMostlyLatin('大原ゆい子')).toBe(false);
+        });
+
+        it('returns false for Korean text', () => {
+            expect(isMostlyLatin('안녕하세요')).toBe(false);
+        });
+
+        it('returns false for Chinese text', () => {
+            expect(isMostlyLatin('你好世界')).toBe(false);
+        });
+
+        it('returns false for mixed text with majority non-Latin', () => {
+            expect(isMostlyLatin('Hello 世界大学')).toBe(false); // 5 Latin, 4 CJK → ~55% Latin < 70%
+        });
+
+        it('returns true for mixed text with majority Latin', () => {
+            expect(isMostlyLatin('Hello World 日')).toBe(true); // 10 Latin, 1 CJK → ~91% Latin
+        });
+
+        it('returns false for Arabic text', () => {
+            expect(isMostlyLatin('مرحبا بالعالم')).toBe(false);
         });
     });
 
     // ─── Compound Text Parsing ───────────────────────────────────────────────
 
     describe('parseCompoundText', () => {
-        beforeEach(() => {
-            // Setup language detection mocks for different text types
-            mockDetectLanguage.mockImplementation((text, cb) => {
-                // Japanese text detection
-                if (/[\u3040-\u30ff\u4e00-\u9faf]/.test(text)) {
-                    cb({ languages: [{ language: 'ja', percentage: 95 }] });
-                } else if (/[\uac00-\ud7af]/.test(text)) {
-                    // Korean
-                    cb({ languages: [{ language: 'ko', percentage: 95 }] });
-                } else {
-                    // Default - not called for ASCII text due to fast path
-                    cb({ languages: [] });
-                }
-            });
-        });
-
-        it('parses bullet-separated text with mixed content', async () => {
-            const result = await parseCompoundText('日本語プレイリスト • Spotify', 'bullet');
+        it('parses bullet-separated text with mixed content', () => {
+            const result = parseCompoundText('日本語プレイリスト • Spotify', 'bullet');
 
             expect(result.hasTranslatable).toBe(true);
             expect(result.segments).toHaveLength(3);
             expect(result.segments[0]).toEqual({
                 text: '日本語プレイリスト',
                 type: 'translatable',
-                language: 'ja',
             });
             expect(result.segments[1]).toEqual({
                 text: ' • ',
@@ -124,15 +84,29 @@ describe('text utilities', () => {
             });
         });
 
-        it('marks all-ASCII compound text correctly', async () => {
-            const result = await parseCompoundText('Playlist • Spotify', 'bullet');
+        it('marks all-ASCII compound text correctly', () => {
+            const result = parseCompoundText('Playlist • Spotify', 'bullet');
 
             expect(result.hasTranslatable).toBe(false);
             expect(result.segments.every((s) => s.type !== 'translatable')).toBe(true);
         });
 
-        it('parses comma-separated artists', async () => {
-            const result = await parseCompoundText('Artist1, 大原ゆい子, Artist2', 'comma');
+        it('marks French text as non-translatable (Latin script)', () => {
+            const result = parseCompoundText('Café résumé • Spotify', 'bullet');
+
+            expect(result.hasTranslatable).toBe(false);
+            expect(result.segments[0].type).toBe('ascii'); // French text treated as Latin
+        });
+
+        it('marks German text as non-translatable (Latin script)', () => {
+            const result = parseCompoundText('Ärger über • Spotify', 'bullet');
+
+            expect(result.hasTranslatable).toBe(false);
+            expect(result.segments[0].type).toBe('ascii'); // German text treated as Latin
+        });
+
+        it('parses comma-separated artists', () => {
+            const result = parseCompoundText('Artist1, 大原ゆい子, Artist2', 'comma');
 
             expect(result.segments).toHaveLength(5); // 3 artists + 2 commas
             expect(result.segments.filter((s) => s.type === 'translatable')).toHaveLength(1);
@@ -140,28 +114,25 @@ describe('text utilities', () => {
             expect(result.segments.filter((s) => s.type === 'delimiter')).toHaveLength(2);
         });
 
-        it('handles single text without delimiter type', async () => {
-            const result = await parseCompoundText('大原ゆい子');
+        it('handles single text without delimiter type', () => {
+            const result = parseCompoundText('大原ゆい子');
 
             expect(result.segments).toHaveLength(1);
             expect(result.segments[0].type).toBe('translatable');
-            expect(result.segments[0].language).toBe('ja');
+        });
+
+        it('handles single Latin text without delimiter type', () => {
+            const result = parseCompoundText('Hello World');
+
+            expect(result.segments).toHaveLength(1);
+            expect(result.segments[0].type).toBe('ascii');
+            expect(result.hasTranslatable).toBe(false);
         });
     });
 
     describe('reconstructText', () => {
-        beforeEach(() => {
-            mockDetectLanguage.mockImplementation((text, cb) => {
-                if (/[\u3040-\u30ff\u4e00-\u9faf]/.test(text)) {
-                    cb({ languages: [{ language: 'ja', percentage: 95 }] });
-                } else {
-                    cb({ languages: [] });
-                }
-            });
-        });
-
-        it('replaces translatable segments with translations', async () => {
-            const parsed = await parseCompoundText('日本語 • Spotify', 'bullet');
+        it('replaces translatable segments with translations', () => {
+            const parsed = parseCompoundText('日本語 • Spotify', 'bullet');
 
             // Mock translation lookup
             const getTranslation = (original: string) => {
@@ -173,16 +144,16 @@ describe('text utilities', () => {
             expect(result).toBe('Japanese • Spotify');
         });
 
-        it('keeps original if translation not available', async () => {
-            const parsed = await parseCompoundText('日本語 • Spotify', 'bullet');
+        it('keeps original if translation not available', () => {
+            const parsed = parseCompoundText('日本語 • Spotify', 'bullet');
 
             // No translations available
             const result = reconstructText(parsed, () => null);
             expect(result).toBe('日本語 • Spotify');
         });
 
-        it('handles multiple translatable segments', async () => {
-            const parsed = await parseCompoundText('アーティスト1, アーティスト2', 'comma');
+        it('handles multiple translatable segments', () => {
+            const parsed = parseCompoundText('アーティスト1, アーティスト2', 'comma');
 
             const translations = new Map([
                 ['アーティスト1', 'Artist 1'],
@@ -195,31 +166,19 @@ describe('text utilities', () => {
     });
 
     describe('getTranslatableSegments', () => {
-        beforeEach(() => {
-            mockDetectLanguage.mockImplementation((text, cb) => {
-                if (/[\u3040-\u30ff\u4e00-\u9faf]/.test(text)) {
-                    cb({ languages: [{ language: 'ja', percentage: 95 }] });
-                } else if (/[\uac00-\ud7af]/.test(text)) {
-                    cb({ languages: [{ language: 'ko', percentage: 95 }] });
-                } else {
-                    cb({ languages: [] });
-                }
-            });
-        });
-
-        it('extracts only translatable segments', async () => {
-            const parsed = await parseCompoundText('日本語 • Spotify • 한국어', 'bullet');
+        it('extracts only translatable segments', () => {
+            const parsed = parseCompoundText('日本語 • Spotify • 한국어', 'bullet');
             const translatable = getTranslatableSegments(parsed);
 
             expect(translatable).toHaveLength(2);
             expect(translatable.every((s) => s.type === 'translatable')).toBe(true);
         });
 
-        it('filters out delimiter-only segments', async () => {
+        it('filters out delimiter-only segments', () => {
             // Simulate a case where delimiter chars might slip through as "translatable"
             const parsed = {
                 segments: [
-                    { text: '日本語', type: 'translatable' as const, language: 'ja' },
+                    { text: '日本語', type: 'translatable' as const },
                     { text: ' • ', type: 'delimiter' as const },
                     { text: '•', type: 'translatable' as const }, // Single delimiter char marked as translatable
                     { text: '  --  ', type: 'translatable' as const }, // Dashes only

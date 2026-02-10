@@ -5,8 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 
 interface LocalizeRequest {
     text: string;
-    fromLanguage: string;
-    toLanguage: string;
+    language: string; // Target language (e.g., 'en')
 }
 
 interface LocalizeResponse {
@@ -34,11 +33,10 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
 
 export async function fetchTranslation(
     text: string,
-    fromLanguage: string = 'ja',
-    toLanguage: string = 'en',
+    language: string = 'en',
     maxRetries: number = 1
 ): Promise<LocalizeResponse> {
-    const requestBody: LocalizeRequest = { text, fromLanguage, toLanguage };
+    const requestBody: LocalizeRequest = { text, language };
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         let response: Response;

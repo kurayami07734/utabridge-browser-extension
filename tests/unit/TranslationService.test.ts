@@ -89,7 +89,7 @@ describe('TranslationService', () => {
             storageMap.set('translation_Cached Song', cachedValue);
             const callback = vi.fn();
 
-            TranslationService.observe('Cached Song', 'ja', callback);
+            TranslationService.observe('Cached Song', callback);
 
             // Since get is async, we need to wait briefly or just expect it to be called eventually
             // In the implementation, observe calls get().then().
@@ -102,7 +102,7 @@ describe('TranslationService', () => {
 
         it('should trigger API request and return null first if missing', async () => {
             const callback = vi.fn();
-            TranslationService.observe('Unknown Song', 'ja', callback);
+            TranslationService.observe('Unknown Song', callback);
 
             await vi.waitFor(() => {
                 expect(callback).toHaveBeenCalledWith(null);
@@ -111,13 +111,12 @@ describe('TranslationService', () => {
             expect(mockBrowser.runtime.sendMessage).toHaveBeenCalledWith({
                 type: 'REQUEST_TRANSLATION',
                 text: 'Unknown Song',
-                sourceLanguage: 'ja',
             });
         });
 
         it('should notify listener when storage updates with CachedTranslation', async () => {
             const callback = vi.fn();
-            TranslationService.observe('Future Song', 'ja', callback);
+            TranslationService.observe('Future Song', callback);
 
             await vi.waitFor(() => {
                 expect(callback).toHaveBeenCalledWith(null);

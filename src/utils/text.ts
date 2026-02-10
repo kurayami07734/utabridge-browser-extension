@@ -1,73 +1,67 @@
 import type { CachedTranslation, PrimaryDisplay } from '@/utils/types';
 
-// ─── CHROME API TYPES ──────────────────────────────────────────────────────
+// ─── SCRIPT DETECTION ──────────────────────────────────────────────────────
 
-interface LanguageDetectionResult {
-    languages: Array<{
-        language: string;
-        percentage: number;
-    }>;
-}
-
-declare const chrome: {
-    i18n: {
-        detectLanguage: (text: string, callback: (result: LanguageDetectionResult) => void) => void;
-    };
-};
-
-// ─── LANGUAGE DETECTION ────────────────────────────────────────────────────
-
-export interface DetectedText {
-    text: string;
-    language: string | null; // Language code from Chrome's detector (e.g., 'ja', 'ko', 'zh', 'fr')
-    needsTranslation: boolean;
+/**
+ * Check if a character is a Latin-script letter.
+ * Covers Basic Latin (A-Z, a-z), Latin-1 Supplement (À-ÿ),
+ * Latin Extended-A (Ā-ſ), and Latin Extended-B (ƀ-ɏ).
+ * This includes diacritics used in German, French, Spanish, etc.
+ */
+function isLatinLetter(code: number): boolean {
+    return (
+        (code >= 0x41 && code <= 0x5a) || // A-Z
+        (code >= 0x61 && code <= 0x7a) || // a-z
+        (code >= 0xc0 && code <= 0xff && code !== 0xd7 && code !== 0xf7) || // Latin-1 Supplement letters (À-ÿ, excluding × ÷)
+        (code >= 0x0100 && code <= 0x024f) // Latin Extended-A + B
+    );
 }
 
 /**
- * Quick check if text is ASCII-only (no translation needed).
- * ASCII characters are in the range 0-127.
+ * Check if a character is a "letter" (not space, punctuation, digits, or symbols).
+ * Uses a broad heuristic: anything above 0x2F that isn't in known punctuation/symbol ranges.
  */
-export function isAsciiOnly(text: string): boolean {
+function isLetter(code: number): boolean {
+    // Basic digit range
+    if (code >= 0x30 && code <= 0x39) return false;
+    // Basic ASCII punctuation/symbols/control (0x00-0x40 excluding digits, 0x5B-0x60, 0x7B-0x7F)
+    if (code <= 0x40) return false;
+    if (code >= 0x5b && code <= 0x60) return false;
+    if (code >= 0x7b && code <= 0x7f) return false;
+    // General punctuation, symbols, etc. (middle dot, bullet, dashes)
+    if (code >= 0x2000 && code <= 0x206f) return false; // General Punctuation block
+    if (code === 0xb7 || code === 0x2022 || code === 0x2023) return false; // ·, •, ‣
+    // Everything else is treated as a letter
+    return code > 0x7f || isLatinLetter(code);
+}
+
+/**
+ * Check if text is predominantly Latin-script characters.
+ * Returns true for English, German, French, Spanish, etc.
+ * Returns false for Japanese, Korean, Chinese, Arabic, Thai, etc.
+ *
+ * Only considers "letter" characters (ignores spaces, digits, basic punctuation).
+ * If ≥70% of letters are Latin, the text is considered "mostly Latin" and
+ * does not need translation.
+ */
+export function isMostlyLatin(text: string): boolean {
+    let latinCount = 0;
+    let letterCount = 0;
+
     for (let i = 0; i < text.length; i++) {
-        if (text.charCodeAt(i) > 127) {
-            return false;
+        const code = text.charCodeAt(i);
+        if (isLetter(code)) {
+            letterCount++;
+            if (isLatinLetter(code)) {
+                latinCount++;
+            }
         }
     }
-    return true;
-}
 
-/**
- * Detect language of text using browser's built-in detector.
- * Returns the detected language code (or null for ASCII-only text).
- *
- * Uses chrome.i18n.detectLanguage() which runs locally (no network).
- * We don't validate language codes - backend uses Google Cloud Translate
- * which supports 100+ languages. If translation fails, we skip replacement.
- */
-export async function detectLanguage(text: string): Promise<DetectedText> {
-    // Fast path: ASCII-only text doesn't need translation
-    if (isAsciiOnly(text)) {
-        return { text, language: null, needsTranslation: false };
-    }
+    // No letters at all (e.g., pure punctuation/digits) — skip translation
+    if (letterCount === 0) return true;
 
-    // Use Chrome's built-in language detector
-    return new Promise((resolve) => {
-        chrome.i18n.detectLanguage(text, (result) => {
-            const topLang = result.languages[0];
-
-            if (topLang && topLang.percentage > 50) {
-                // Send whatever language Chrome detected - backend handles validation
-                resolve({
-                    text,
-                    language: topLang.language,
-                    needsTranslation: true,
-                });
-            } else {
-                // Low confidence or no detection - still try if text has non-ASCII
-                resolve({ text, language: 'und', needsTranslation: true }); // 'und' = undetermined
-            }
-        });
-    });
+    return latinCount / letterCount >= 0.7;
 }
 
 // ─── DISPLAY HELPERS ───────────────────────────────────────────────────────
@@ -86,7 +80,6 @@ export type SegmentType = 'delimiter' | 'ascii' | 'translatable';
 export interface TextSegment {
     text: string;
     type: SegmentType;
-    language?: string; // Only set for 'translatable' segments
 }
 
 export interface ParsedCompoundText {
@@ -100,63 +93,56 @@ const DELIMITERS = {
 };
 
 /**
- * Parse compound text and detect language for each non-ASCII segment.
+ * Parse compound text and classify each segment as translatable or not.
  *
  * Example: "日本語プレイリスト • Spotify"
  * Returns:
  *   segments: [
- *     { text: '日本語プレイリスト', type: 'translatable', language: 'ja' },
+ *     { text: '日本語プレイリスト', type: 'translatable' },
  *     { text: ' • ', type: 'delimiter' },
  *     { text: 'Spotify', type: 'ascii' },
  *   ]
  *
  * Only 'translatable' segments should be sent to the backend.
- * Delimiters and ASCII segments are preserved as-is.
+ * Delimiters and Latin-script segments are preserved as-is.
  */
-export async function parseCompoundText(
+export function parseCompoundText(
     text: string,
     delimiterType?: 'bullet' | 'comma'
-): Promise<ParsedCompoundText> {
+): ParsedCompoundText {
     // If no delimiter type, treat whole text as single segment
     if (!delimiterType) {
-        const detected = await detectLanguage(text);
+        const mostlyLatin = isMostlyLatin(text);
         return {
             segments: [
                 {
                     text,
-                    type: detected.needsTranslation ? 'translatable' : 'ascii',
-                    language: detected.language ?? undefined,
+                    type: mostlyLatin ? 'ascii' : 'translatable',
                 },
             ],
-            hasTranslatable: detected.needsTranslation,
+            hasTranslatable: !mostlyLatin,
         };
     }
 
     const regex = DELIMITERS[delimiterType];
     const parts = text.split(regex).filter(Boolean);
 
-    // Process each part in parallel
-    const segments: TextSegment[] = await Promise.all(
-        parts.map(async (part): Promise<TextSegment> => {
-            // Check if this part is a delimiter
-            if (regex.test(part)) {
-                return { text: part, type: 'delimiter' };
-            }
+    const segments: TextSegment[] = parts.map((part): TextSegment => {
+        // Check if this part is a delimiter
+        if (regex.test(part)) {
+            return { text: part, type: 'delimiter' };
+        }
 
-            // Detect language for content segments
-            const detected = await detectLanguage(part.trim());
+        // Check if content is mostly Latin script
+        if (isMostlyLatin(part.trim())) {
+            return { text: part, type: 'ascii' };
+        }
 
-            if (!detected.needsTranslation) {
-                return { text: part, type: 'ascii' };
-            }
-
-            return {
-                text: part,
-                type: 'translatable',
-                language: detected.language ?? undefined,
-            };
-        })
-    );
+        return {
+            text: part,
+            type: 'translatable',
+        };
+    });
 
     return {
         segments,
