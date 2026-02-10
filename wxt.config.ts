@@ -31,7 +31,7 @@ export default defineConfig({
         }
 
         if (mode === 'development') {
-            config.key = import.meta.env.VITE_EXTENSION_PUBLIC_KEY;
+            config.key = import.meta.env.VITE_DEV_KEY;
         }
 
         return config;
