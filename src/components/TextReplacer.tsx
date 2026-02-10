@@ -33,7 +33,6 @@ function SegmentTranslator({
 }) {
     const { translation } = useTranslation(
         segment.text.trim(),
-        segment.language ?? 'und',
         segment.type === 'translatable'
     );
 
@@ -50,19 +49,18 @@ function SegmentTranslator({
  * Handles translation and tooltip for a single element.
  * Supports compound text (e.g., "日本語 • Spotify") by:
  * 1. Splitting on delimiters
- * 2. Translating only non-ASCII segments
- * 3. Reconstructing with translated segments + original delimiters/ASCII
+ * 2. Translating only non-Latin-script segments
+ * 3. Reconstructing with translated segments + original delimiters/Latin text
  */
 export function TextReplacer({ el, target }: Props) {
     const displayPref = useDisplayPreference();
     const originalText = useMemo(() => el.textContent ?? '', [el]);
 
-    // Parse compound text asynchronously
-    const [parsed, setParsed] = useState<ParsedCompoundText | null>(null);
-
-    useEffect(() => {
-        parseCompoundText(originalText, target.parseAs).then(setParsed);
-    }, [originalText, target.parseAs]);
+    // Parse compound text (synchronous — no async language detection)
+    const parsed = useMemo<ParsedCompoundText | null>(
+        () => parseCompoundText(originalText, target.parseAs),
+        [originalText, target.parseAs]
+    );
 
     // Get translatable segments
     const translatableSegments = useMemo(
@@ -147,3 +145,4 @@ export function TextReplacer({ el, target }: Props) {
         </>
     );
 }
+

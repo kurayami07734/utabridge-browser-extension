@@ -1,7 +1,6 @@
 export interface TranslationRequest {
     type: 'REQUEST_TRANSLATION';
     text: string;
-    sourceLanguage: string; // Detected language code (e.g., 'ja', 'ko', 'zh')
 }
 
 export type ExtensionMessage = TranslationRequest;
