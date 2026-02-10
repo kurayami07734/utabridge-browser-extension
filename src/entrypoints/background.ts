@@ -6,7 +6,7 @@ import { ExtensionMessage } from '@/utils/types';
 import { InvalidTokenError, RateLimitError } from '@/utils/errors';
 
 export default defineBackground(() => {
-    const queue = new RequestQueue(2);
+    const queue = new RequestQueue(10);
     const pendingRequests = new Set<string>();
 
     async function updateHealthStatus() {
@@ -60,4 +60,3 @@ export default defineBackground(() => {
         });
     }
 });
-
