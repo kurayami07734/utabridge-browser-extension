@@ -4,6 +4,7 @@ import { TranslationService } from '@/services/TranslationService';
 import { apiHealth } from '@/utils/storage';
 import { ExtensionMessage } from '@/utils/types';
 import { InvalidTokenError, RateLimitError } from '@/utils/errors';
+import { decode as decodeHtml } from 'he';
 
 export default defineBackground(() => {
     const queue = new RequestQueue(10);
@@ -43,8 +44,8 @@ export default defineBackground(() => {
             try {
                 const result = await fetchTranslation(text, 'en');
                 await TranslationService.set(text, {
-                    translatedText: result.translatedText,
-                    romanizedText: result.romanizedText,
+                    translatedText: decodeHtml(result.translatedText),
+                    romanizedText: decodeHtml(result.romanizedText),
                 });
             } catch (e) {
                 if (e instanceof InvalidTokenError) {
