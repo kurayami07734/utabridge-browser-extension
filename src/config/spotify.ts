@@ -83,6 +83,13 @@ export const TARGETS: TextTarget[] = [
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'entity-title', selector: '[data-testid="entityTitle"] h1' },
     { id: 'creator-link', selector: '[data-testid="creator-link"]' },
+    {
+        // Playlist description text (the <div> inside the subdued text span in the header)
+        // Excludes artist divs in tracklist rows which have data-encore-id="text"
+        id: 'playlist-description',
+        selector:
+            '[data-testid="playlist-page"] span.encore-internal-color-text-subdued[data-encore-id="text"] > div:not([data-encore-id])',
+    },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // CARDS (home page shelves, artist discography, recommendations)
