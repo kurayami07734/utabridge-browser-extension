@@ -48,13 +48,24 @@ export default defineBackground(() => {
                     romanizedText: decodeHtml(result.romanizedText),
                 });
             } catch (e) {
+                let errorMsg = 'Unknown error';
                 if (e instanceof InvalidTokenError) {
+                    errorMsg = 'auth_required';
                     console.warn('[Background] Auth required:', e.message);
                 } else if (e instanceof RateLimitError) {
+                    errorMsg = 'rate_limited';
                     console.warn('[Background] Rate limited, will retry later');
                 } else {
+                    errorMsg = e instanceof Error ? e.message : 'Unknown error';
                     console.error('[Background] Translation failed:', text, e);
                 }
+
+                // Store error marker so the content script stops pulsing
+                await TranslationService.set(text, {
+                    translatedText: '',
+                    romanizedText: '',
+                    error: errorMsg,
+                });
             } finally {
                 pendingRequests.delete(text);
             }
