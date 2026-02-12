@@ -5,6 +5,7 @@ import type { CachedTranslation } from '@/utils/types';
 interface UseTranslationResult {
     translation: CachedTranslation | null;
     isLoading: boolean;
+    error: string | null;
     reset: () => void;
 }
 
@@ -18,10 +19,12 @@ interface UseTranslationResult {
 export function useTranslation(text: string, enabled: boolean): UseTranslationResult {
     const [translation, setTranslation] = useState<CachedTranslation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const reset = useCallback(() => {
         setTranslation(null);
         setIsLoading(false);
+        setError(null);
     }, []);
 
     useEffect(() => {
@@ -32,16 +35,25 @@ export function useTranslation(text: string, enabled: boolean): UseTranslationRe
 
         const unsubscribe = TranslationService.observe(text, (result) => {
             if (result) {
-                setTranslation(result);
-                setIsLoading(false);
+                if (result.error) {
+                    // Error response — stop loading, don't set translation
+                    setTranslation(null);
+                    setIsLoading(false);
+                    setError(result.error);
+                } else {
+                    setTranslation(result);
+                    setIsLoading(false);
+                    setError(null);
+                }
             } else {
                 setTranslation(null);
                 setIsLoading(true);
+                setError(null);
             }
         });
 
         return unsubscribe;
     }, [text, enabled, reset]);
 
-    return { translation, isLoading, reset };
+    return { translation, isLoading, error, reset };
 }

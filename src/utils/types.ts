@@ -15,6 +15,7 @@ export interface TranslateResponse {
 export interface CachedTranslation {
     translatedText: string;
     romanizedText: string;
+    error?: string; // Present when the translation request failed
 }
 
 // User preference for primary display
