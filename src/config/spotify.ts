@@ -92,6 +92,15 @@ export const TARGETS: TextTarget[] = [
     },
 
     // ═══════════════════════════════════════════════════════════════════════════
+    // HOME PAGE SHORTCUTS (recents grid — "Good morning/afternoon/evening")
+    // ═══════════════════════════════════════════════════════════════════════════
+    {
+        // The <p> text inside each shortcut card, anchored via the shortcut-image
+        id: 'shortcut-title',
+        selector: 'div:has(img[data-testid="shortcut-image"]) ~ div p[data-encore-id="text"]',
+    },
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // CARDS (home page shelves, artist discography, recommendations)
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'card-title', selector: '[data-encore-id="cardTitle"] span' },
