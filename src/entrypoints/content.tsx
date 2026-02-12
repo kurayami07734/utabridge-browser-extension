@@ -3,30 +3,41 @@ import { useEffect, useState } from 'react';
 
 import { useDomScanner } from '@/hooks/useDomScanner';
 import { TextReplacer } from '@/components/TextReplacer';
-import { isExtensionEnabled } from '@/utils/storage';
+import { isExtensionEnabled, authTokens } from '@/utils/storage';
 import '@/assets/style.css';
 
 function App() {
     const [enabled, setEnabled] = useState(true);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
         isExtensionEnabled.getValue().then(setEnabled);
-        return isExtensionEnabled.watch(setEnabled);
+        authTokens.getValue().then((tokens) => setIsLoggedIn(!!tokens));
+
+        const unwatchEnabled = isExtensionEnabled.watch(setEnabled);
+        const unwatchAuth = authTokens.watch((tokens) => setIsLoggedIn(!!tokens));
+
+        return () => {
+            unwatchEnabled();
+            unwatchAuth();
+        };
     }, []);
 
+    // Observer only runs when user is logged in AND global toggle is on
+    const active = enabled && isLoggedIn;
+
     // useDomScanner returns targets and a reset function
-    const { targets, reset } = useDomScanner(enabled);
+    const { targets, reset } = useDomScanner(active);
 
     // Clear targets when extension is disabled to unmount TextReplacers
     // (which triggers their cleanup to restore original text)
     useEffect(() => {
-        if (!enabled) reset();
-    }, [enabled, reset]);
+        if (!active) reset();
+    }, [active, reset]);
 
     return (
         <>
-            {enabled &&
-                targets.map((t) => <TextReplacer key={t.uid} el={t.el} target={t.target} />)}
+            {active && targets.map((t) => <TextReplacer key={t.uid} el={t.el} target={t.target} />)}
         </>
     );
 }
