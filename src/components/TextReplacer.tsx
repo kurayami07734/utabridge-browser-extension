@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import tippy, { Instance as TippyInstance } from 'tippy.js';
+import tippy, { Instance as TippyInstance, followCursor } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { useDisplayPreference } from '@/hooks/useDisplayPreference';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -117,12 +117,14 @@ export function TextReplacer({ el, target }: Props) {
         const instance: TippyInstance = tippy(activeEl, {
             content: tooltipText,
             placement: target.tooltip === 'bottom' ? 'bottom' : 'top',
-            arrow: true,
+            arrow: false,
             animation: 'fade',
             theme: 'spotify',
             delay: [200, 0], // Show after 200ms, hide immediately
             duration: [150, 100],
             appendTo: document.body,
+            followCursor: true,
+            plugins: [followCursor],
         });
 
         return () => {
