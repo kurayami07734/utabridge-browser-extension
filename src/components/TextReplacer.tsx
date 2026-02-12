@@ -31,10 +31,7 @@ function SegmentTranslator({
     segment: TextSegment;
     onTranslation: (text: string, translation: CachedTranslation) => void;
 }) {
-    const { translation } = useTranslation(
-        segment.text.trim(),
-        segment.type === 'translatable'
-    );
+    const { translation } = useTranslation(segment.text.trim(), segment.type === 'translatable');
 
     useEffect(() => {
         if (translation) {
@@ -91,8 +88,9 @@ export function TextReplacer({ el, target }: Props) {
     // Determine loading state
     const isLoading = parsed?.hasTranslatable && translatableSegments.length > translations.size;
 
-    // Apply text replacement
-    useTextReplace({
+    // Apply text replacement — returns the element currently in the DOM
+    // (may be a clone of `el` to preserve classes and structure)
+    const activeEl = useTextReplace({
         el,
         parsed,
         translations,
@@ -110,13 +108,13 @@ export function TextReplacer({ el, target }: Props) {
             .join(' • ');
     }, [parsed, translatableSegments, translations]);
 
-    // Setup Tippy tooltip
+    // Setup Tippy tooltip on the active element (clone or original)
     useEffect(() => {
         // Skip tooltip for title element (browser tab) - not visible on page
-        const isTitle = el.tagName === 'TITLE';
+        const isTitle = activeEl.tagName === 'TITLE';
         if (!tooltipText || isTitle) return;
 
-        const instance: TippyInstance = tippy(el, {
+        const instance: TippyInstance = tippy(activeEl, {
             content: tooltipText,
             placement: target.tooltip === 'bottom' ? 'bottom' : 'top',
             arrow: true,
@@ -130,7 +128,7 @@ export function TextReplacer({ el, target }: Props) {
         return () => {
             instance.destroy();
         };
-    }, [el, tooltipText, target.tooltip]);
+    }, [activeEl, tooltipText, target.tooltip]);
 
     // Render segment translators (invisible, just for data fetching)
     return (
@@ -145,4 +143,3 @@ export function TextReplacer({ el, target }: Props) {
         </>
     );
 }
-

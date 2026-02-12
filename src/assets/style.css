@@ -1,34 +1,5 @@
 @import 'tailwindcss';
 
-@keyframes ub-marquee {
-    0% {
-        transform: translateX(0);
-    }
-
-    100% {
-        transform: translateX(-50%);
-    }
-}
-
-.ub-marquee-wrapper {
-    overflow: hidden;
-    white-space: nowrap;
-    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-}
-
-.ub-marquee-inner {
-    display: inline-flex;
-    white-space: nowrap;
-}
-
-.ub-animate-marquee {
-    animation: ub-marquee 15s linear infinite;
-}
-
-.ub-animate-marquee:hover {
-    animation-play-state: paused;
-}
-
 /* Subtle loading state for text being translated */
 @keyframes ub-pulse {
     0%,

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useEffect } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { PrimaryDisplay } from '@/utils/types';
 import { type ParsedCompoundText, reconstructText } from '@/utils/text';
 
@@ -12,57 +12,43 @@ interface Props {
 }
 
 /**
- * Checks if element content overflows its container.
+ * Creates a deep clone of the element with only text nodes updated.
+ * All classes, attributes, child elements, and DOM structure are preserved.
  */
-function isOverflowing(el: HTMLElement): boolean {
-    return el.scrollWidth > el.clientWidth;
+function cloneWithNewText(el: HTMLElement, newText: string): HTMLElement {
+    const clone = el.cloneNode(true) as HTMLElement;
+
+    // Walk text nodes in the clone and update them
+    const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+    const firstTextNode = walker.nextNode();
+
+    if (firstTextNode) {
+        // Put all text in first text node, clear any remaining ones
+        firstTextNode.nodeValue = newText;
+        let next;
+        while ((next = walker.nextNode())) {
+            (next as Text).nodeValue = '';
+        }
+    } else {
+        // No text nodes exist — append one
+        clone.appendChild(document.createTextNode(newText));
+    }
+
+    return clone;
 }
 
 /**
- * Applies marquee effect to an overflowing element.
- * Returns a cleanup function.
- */
-function applyMarquee(el: HTMLElement, text: string): () => void {
-    const originalHTML = el.innerHTML;
-
-    // Create marquee structure:
-    // <span class="ub-marquee-wrapper">
-    //   <span class="ub-marquee-inner ub-animate-marquee">
-    //     <span>text</span>
-    //     <span style="padding-left: 2em">text</span> (duplicate for seamless loop)
-    //   </span>
-    // </span>
-    el.innerHTML = '';
-    const wrapper = document.createElement('span');
-    wrapper.className = 'ub-marquee-wrapper';
-    wrapper.style.display = 'inline-block';
-    wrapper.style.maxWidth = '100%';
-
-    const inner = document.createElement('span');
-    inner.className = 'ub-marquee-inner ub-animate-marquee';
-
-    const text1 = document.createElement('span');
-    text1.textContent = text;
-
-    const text2 = document.createElement('span');
-    text2.textContent = text;
-    text2.style.paddingLeft = '2em';
-
-    inner.appendChild(text1);
-    inner.appendChild(text2);
-    wrapper.appendChild(inner);
-    el.appendChild(wrapper);
-
-    return () => {
-        el.innerHTML = originalHTML;
-    };
-}
-
-/**
- * Replaces element text with translations.
- * Handles compound text by reconstructing with translated segments.
- * Tracks original text and restores on unmount.
- * Applies marquee effect if text overflows.
+ * Replaces element text with translations using a clone-and-replace approach.
+ *
+ * Instead of mutating the original element (which can destroy child elements
+ * and their classes like `standalone-ellipsis-one-line`), this hook:
+ * 1. Deep-clones the original element (preserving ALL classes, attributes, structure)
+ * 2. Updates only text nodes in the clone
+ * 3. Swaps the clone into the DOM in place of the original
+ * 4. On cleanup, swaps the original back
+ *
+ * Returns the element currently in the DOM (clone or original),
+ * so callers can attach tooltips etc. to the correct node.
  */
 export function useTextReplace({
     el,
@@ -71,17 +57,12 @@ export function useTextReplace({
     loading,
     displayPref,
     enabled,
-}: Props): string {
-    const original = useRef(el.textContent ?? '');
-    const marqueeCleanup = useRef<(() => void) | null>(null);
+}: Props): HTMLElement {
+    const [activeEl, setActiveEl] = useState<HTMLElement>(el);
 
     useLayoutEffect(() => {
         if (!enabled) return;
 
-        // Capture ref values at effect start (React hooks lint rule)
-        const originalText = original.current;
-
-        // Check if this is the title element (browser tab)
         const isTitle = el.tagName === 'TITLE';
 
         // Show subtle loading state (skip for title - can't style browser tab)
@@ -106,38 +87,31 @@ export function useTextReplace({
             return t?.primary ?? null;
         });
 
-        // Apply if different
-        if (el.textContent !== newText) {
+        // Skip if text hasn't actually changed
+        if (el.textContent === newText) return;
+
+        // Title element: just set text directly (can't be styled, no truncation concern)
+        if (isTitle) {
             el.textContent = newText;
+            return;
         }
 
-        // Restore on cleanup (skip for title - it changes frequently)
-        if (!isTitle) {
-            return () => {
-                // Clean up marquee if it was applied
-                if (marqueeCleanup.current) {
-                    marqueeCleanup.current();
-                    marqueeCleanup.current = null;
-                }
-                el.textContent = originalText;
-            };
-        }
+        // Clone the original element with updated text
+        // This preserves all classes, attributes, and child element structure
+        const clone = cloneWithNewText(el, newText);
+
+        // Swap clone into the DOM
+        el.parentNode?.replaceChild(clone, el);
+        setActiveEl(clone);
+
+        return () => {
+            // Swap original back in
+            if (clone.parentNode) {
+                clone.parentNode.replaceChild(el, clone);
+            }
+            setActiveEl(el);
+        };
     }, [el, parsed, translations, loading, displayPref, enabled]);
 
-    // Check for overflow after render and apply marquee if needed
-    useEffect(() => {
-        if (!enabled || !parsed?.hasTranslatable || translations.size === 0) return;
-        if (el.tagName === 'TITLE') return; // Skip for title
-
-        // Wait for next frame to ensure layout is complete
-        const frame = requestAnimationFrame(() => {
-            if (isOverflowing(el) && !marqueeCleanup.current) {
-                marqueeCleanup.current = applyMarquee(el, el.textContent ?? '');
-            }
-        });
-
-        return () => cancelAnimationFrame(frame);
-    }, [el, enabled, parsed, translations]);
-
-    return original.current;
+    return activeEl;
 }
