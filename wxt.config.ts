@@ -21,17 +21,16 @@ export default defineConfig({
                 client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
                 scopes: ['openid', 'email', 'profile'],
             };
+            if (mode === 'development') {
+                config.key = import.meta.env.VITE_DEV_KEY;
+            }
         } else if (browser === 'firefox') {
             config.browser_specific_settings = {
                 gecko: {
-                    id: 'adityaghidora+utabridge@gmail.com',
+                    id: 'utabridge@ghidora.dev',
                     strict_min_version: '109.0',
                 },
             };
-        }
-
-        if (mode === 'development') {
-            config.key = import.meta.env.VITE_DEV_KEY;
         }
 
         return config;
@@ -42,5 +41,9 @@ export default defineConfig({
     webExt: {
         chromiumProfile: resolve('.wxt/chrome-data'),
         keepProfileChanges: true,
+        firefoxPref: {
+            'extensions.webextensions.uuids':
+                '{"utabridge@ghidora.dev":"8b37b48b-22f3-4582-befc-7ca94679d59a"}',
+        },
     },
 });
