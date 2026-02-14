@@ -1,22 +1,37 @@
 import { useEffect, useState } from 'react';
-import { isExtensionEnabled, primaryDisplay } from '@/utils/storage';
+import { Box, CircularProgress } from '@mui/material';
+import { isExtensionEnabled, primaryDisplay, apiHealth, userInfo } from '@/utils/storage';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { updatePreferences } from '@/services/api';
 import type { PrimaryDisplay } from '@/utils/types';
-import { AuthButton } from './components/AuthButton';
+import { LoginPage } from './components/LoginPage';
+import { ServerDownPage } from './components/ServerDownPage';
+import { HomePage } from './components/HomePage';
+import { SettingsPage } from './components/SettingsPage';
+import { NEON_PINK } from './theme';
+
+type View = 'home' | 'settings';
 
 function App() {
+    const { isSignedIn, currentUser, isLoading, signIn, signOut } = useGoogleAuth();
     const [enabled, setEnabled] = useState(true);
     const [displayMode, setDisplayMode] = useState<PrimaryDisplay>('romanization');
+    const [isApiHealthy, setIsApiHealthy] = useState(true);
+    const [currentView, setCurrentView] = useState<View>('home');
 
     useEffect(() => {
         isExtensionEnabled.getValue().then(setEnabled);
         primaryDisplay.getValue().then(setDisplayMode);
+        apiHealth.getValue().then(setIsApiHealthy);
 
         const unwatchEnabled = isExtensionEnabled.watch(setEnabled);
         const unwatchDisplay = primaryDisplay.watch(setDisplayMode);
+        const unwatchHealth = apiHealth.watch(setIsApiHealthy);
 
         return () => {
             unwatchEnabled();
             unwatchDisplay();
+            unwatchHealth();
         };
     }, []);
 
@@ -27,89 +42,88 @@ function App() {
     };
 
     const setDisplay = async (mode: PrimaryDisplay) => {
+        // Optimistic local update
         await primaryDisplay.setValue(mode);
         setDisplayMode(mode);
+
+        if (currentUser?.id) {
+            try {
+                const updated = await updatePreferences(currentUser.id, mode);
+                // Sync from server response
+                const serverMode =
+                    updated.preferences.PRIMARY_TEXT_TYPE === 'ROMANIZATION'
+                        ? 'romanization'
+                        : 'translation';
+                await primaryDisplay.setValue(serverMode as PrimaryDisplay);
+                setDisplayMode(serverMode as PrimaryDisplay);
+                await userInfo.setValue({
+                    id: updated.id,
+                    name: updated.name,
+                    email: updated.email,
+                    pictureUrl: updated.pictureUrl,
+                });
+            } catch (err) {
+                console.error('[App] Failed to sync preference to server:', err);
+            }
+        }
     };
 
+    const handleSignOut = async () => {
+        await signOut();
+        setCurrentView('home');
+    };
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <Box
+                sx={{
+                    width: 320,
+                    minHeight: 260,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'background.default',
+                }}
+            >
+                <CircularProgress size={28} sx={{ color: NEON_PINK }} />
+            </Box>
+        );
+    }
+
     return (
-        <div className="w-[220px] min-h-[240px] flex flex-col items-center bg-zinc-950 p-5 text-white">
-            {/* Header */}
-            <div className="flex flex-col items-center gap-1 mb-5">
-                <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-green-400 to-emerald-600 pb-1">
-                    UtaBridge
-                </h1>
-                <p className="text-xs text-zinc-400 text-center leading-snug">
-                    Translating your music world
-                </p>
-            </div>
-
-            {/* Auth Section */}
-            <div className="w-full mb-4">
-                <AuthButton />
-            </div>
-
-            {/* Enable Toggle */}
-            <div className="flex flex-col items-center gap-2 mb-5">
-                <button
-                    onClick={toggle}
-                    className={`
-                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors 
-                        focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-zinc-900 cursor-pointer
-                        ${enabled ? 'bg-green-500' : 'bg-zinc-700'}
-                    `}
-                >
-                    <span className="sr-only">Enable Translation</span>
-                    <span
-                        className={`
-                            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                            ${enabled ? 'translate-x-6' : 'translate-x-1'}
-                        `}
-                    />
-                </button>
-                <div className="text-xs font-medium text-zinc-500">
-                    {enabled ? 'Active' : 'Disabled'}
-                </div>
-            </div>
-
-            {/* Divider */}
-            <div className="w-full h-px bg-zinc-800 mb-4" />
-
-            {/* Primary Display Setting */}
-            <div className="w-full flex flex-col items-center gap-2">
-                <span className="text-xs text-zinc-400 font-medium">Show as Primary</span>
-                <div className="flex rounded-lg overflow-hidden border border-zinc-700">
-                    <button
-                        onClick={() => setDisplay('romanization')}
-                        className={`
-                            px-3 py-1.5 text-xs font-medium transition-all cursor-pointer
-                            ${
-                                displayMode === 'romanization'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                            }
-                        `}
-                    >
-                        Romaji
-                    </button>
-                    <button
-                        onClick={() => setDisplay('translation')}
-                        className={`
-                            px-3 py-1.5 text-xs font-medium transition-all cursor-pointer border-l border-zinc-700
-                            ${
-                                displayMode === 'translation'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                            }
-                        `}
-                    >
-                        Translation
-                    </button>
-                </div>
-                <p className="text-[10px] text-zinc-500 text-center mt-1">
-                    Hover for {displayMode === 'romanization' ? 'translation' : 'romanization'}
-                </p>
-            </div>
-        </div>
+        <Box
+            sx={{
+                width: 320,
+                minHeight: 260,
+                backgroundColor: 'background.default',
+                overflow: 'hidden',
+            }}
+        >
+            {/* API is down → Server down page (regardless of auth) */}
+            {!isApiHealthy ? (
+                <ServerDownPage />
+            ) : /* Not signed in → Login page */
+            !isSignedIn || !currentUser ? (
+                <LoginPage onSignIn={signIn} />
+            ) : /* Signed in & healthy → Home or Settings */
+            currentView === 'settings' ? (
+                <SettingsPage
+                    user={currentUser}
+                    displayMode={displayMode}
+                    onDisplayChange={setDisplay}
+                    onBack={() => setCurrentView('home')}
+                    onSignOut={handleSignOut}
+                />
+            ) : (
+                <HomePage
+                    user={currentUser}
+                    enabled={enabled}
+                    onToggle={toggle}
+                    onAvatarClick={() => setCurrentView('settings')}
+                />
+            )}
+        </Box>
     );
 }
 
