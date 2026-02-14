@@ -5,7 +5,9 @@ export interface AuthTokens {
 }
 
 export interface UserInfo {
+    id: number;
     name: string;
+    email: string;
     pictureUrl: string | null;
 }
 

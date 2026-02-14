@@ -89,3 +89,36 @@ export async function checkApiHealth(): Promise<boolean> {
         return false;
     }
 }
+
+export interface UserPreferencesResponse {
+    id: number;
+    name: string;
+    pictureUrl: string | null;
+    email: string;
+    preferences: {
+        PRIMARY_TEXT_TYPE: 'ROMANIZATION' | 'TRANSLATION';
+    };
+}
+
+export async function updatePreferences(
+    userId: number,
+    primaryTextType: 'romanization' | 'translation'
+): Promise<UserPreferencesResponse> {
+    const apiValue = primaryTextType === 'romanization' ? 'ROMANIZATION' : 'TRANSLATION';
+
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/users/${userId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+            preferences: {
+                PRIMARY_TEXT_TYPE: apiValue,
+            },
+        }),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new ApiError(errorText, response.status, 'PREFERENCES_UPDATE_ERROR');
+    }
+
+    return await response.json();
+}
